@@ -4,12 +4,12 @@ import {
   CalendarCheck, Check, CheckCircle2, ChevronLeft, ChevronRight, Clock, Download,
   Expand, Heart, Loader2, MapPin, MessageCircle, Send, X, XCircle,
 } from 'lucide-react';
-import { apiGetPublicProposal, apiUpdatePublicProposal } from '../utils/api.js';
+import { apiGetPublicProposal, apiUpdatePublicProposal, apiBaseUrl } from '../utils/api.js';
 import { inr } from '../utils/helpers.js';
 import './PublicProposalPortal.css';
 
 function pdfUrlForToken(token) {
-  return `/api/v1/public/proposals/${encodeURIComponent(token)}/pdf`;
+  return `${apiBaseUrl}/api/v1/public/proposals/${encodeURIComponent(token)}/pdf`;
 }
 
 function initials(name = '') {
