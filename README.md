@@ -1,21 +1,24 @@
-# Spacehaat — Web App
+# Spacehaat — Web App (standalone repo)
 
 React + Vite command center for brokers and admins.
 
-**Deploy independently** to Vercel, Netlify, CloudFront/S3, or Docker.
+**GitHub:** [spacehaat/haat-web-app](https://github.com/spacehaat/haat-web-app)  
+**Deploy:** Vercel, Netlify, Docker
 
-Includes shared packages in `packages/` (`@spacehaat/access`, `@spacehaat/api-client`, `@spacehaat/types`).
+This repo is **self-contained**. Shared code is vendored in `packages/` inside this repo (not a parent monorepo).
+
+Related repos:
+- Backend → [spacehaat/haat-backend](https://github.com/spacehaat/haat-backend)
+- Mobile → [spacehaat/haat-mobile-app](https://github.com/spacehaat/haat-mobile-app)
 
 ## Local development
-
-From **this repository root**:
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open `http://localhost:5173` — API proxied to `http://localhost:8080`.
+Open `http://localhost:5173` — in dev, `/api` is proxied to `http://localhost:8080` (run backend separately).
 
 ## Scripts
 
@@ -27,15 +30,13 @@ Open `http://localhost:5173` — API proxied to `http://localhost:8080`.
 
 ## Environment
 
-| Variable | Default | Notes |
-|----------|---------|-------|
-| `VITE_API_URL` | *(empty)* | Leave empty in dev (Vite proxy). Set to API URL in production. |
+| Variable | When | Value |
+|----------|------|--------|
+| `VITE_API_URL` | Production build | `https://haat-backend.onrender.com` |
 
-Copy `.env.example` to `.env.production`:
+Copy `.env.example` → `.env.production` for local production builds.
 
-```
-VITE_API_URL=https://haat-backend.onrender.com
-```
+**Vercel:** add `VITE_API_URL` in project settings, then redeploy.
 
 ## Docker
 
@@ -44,16 +45,6 @@ docker build -t spacehaat-web .
 docker run -p 8081:80 spacehaat-web
 ```
 
-## Deploy targets
-
-| Platform | Root directory | Build command | Output |
-|----------|----------------|---------------|--------|
-| **Vercel** | `apps/web` | `npm run build` | `dist` |
-| **Netlify** | `apps/web` | `npm run build` | `dist` |
-| **S3 + CloudFront** | — | `npm run build:web` at root | upload `apps/web/dist` |
-
-Install command at repo root: `npm install` (workspaces resolve `@spacehaat/api-client`).
-
 ## API
 
-Requires `apps/backend` running. Set CORS on the backend to allow this app's origin.
+Requires the backend API running. Set backend `CORS_ORIGIN` to include this app's URL.
