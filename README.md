@@ -4,15 +4,15 @@ React + Vite command center for brokers and admins.
 
 **Deploy independently** to Vercel, Netlify, CloudFront/S3, or Docker.
 
-Depends on shared packages in `packages/` (monorepo).
+Includes shared packages in `packages/` (`@spacehaat/access`, `@spacehaat/api-client`, `@spacehaat/types`).
 
 ## Local development
 
-From **repo root**:
+From **this repository root**:
 
 ```bash
 npm install
-npm run dev:web
+npm run dev
 ```
 
 Open `http://localhost:5173` — API proxied to `http://localhost:8080`.
@@ -31,18 +31,16 @@ Open `http://localhost:5173` — API proxied to `http://localhost:8080`.
 |----------|---------|-------|
 | `VITE_API_URL` | *(empty)* | Leave empty in dev (Vite proxy). Set to API URL in production. |
 
-Create `apps/web/.env.production`:
+Copy `.env.example` to `.env.production`:
 
 ```
-VITE_API_URL=https://api.spacehaat.in
+VITE_API_URL=https://haat-backend.onrender.com
 ```
 
 ## Docker
 
-Build from **repository root**:
-
 ```bash
-docker build -f apps/web/Dockerfile -t spacehaat-web .
+docker build -t spacehaat-web .
 docker run -p 8081:80 spacehaat-web
 ```
 
