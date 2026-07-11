@@ -6,8 +6,14 @@ export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
 }
 
-/** Empty in dev (Vite proxy). Set VITE_API_URL in production (e.g. Render backend). */
-export const apiBaseUrl = (import.meta.env.VITE_API_URL || '').replace(/\/$/, '');
+/** Production API base. Prefer VITE_API_URL; else same-origin /api (Vercel proxies to Render). */
+export function resolveApiBaseUrl() {
+  const fromEnv = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
+  return '';
+}
+
+export const apiBaseUrl = resolveApiBaseUrl();
 
 const api = createWebApi({
   baseUrl: apiBaseUrl,
