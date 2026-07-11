@@ -6,11 +6,15 @@ export function setUnauthorizedHandler(fn) {
   onUnauthorized = fn;
 }
 
-/** Production API base. Prefer VITE_API_URL; else same-origin /api (Vercel proxies to Render). */
+/** Production API base URL for fetch(). */
 export function resolveApiBaseUrl() {
+  if (import.meta.env.PROD && typeof window !== 'undefined') {
+    const { hostname } = window.location;
+    // Vercel: same-origin /api — vercel.json proxies to Render (no CORS/cookies issues).
+    if (hostname.endsWith('.vercel.app')) return '';
+  }
   const fromEnv = (import.meta.env.VITE_API_URL || '').trim().replace(/\/$/, '');
-  if (fromEnv) return fromEnv;
-  return '';
+  return fromEnv;
 }
 
 export const apiBaseUrl = resolveApiBaseUrl();

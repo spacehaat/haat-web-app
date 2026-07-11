@@ -36,13 +36,11 @@ Open `http://localhost:5173` — in dev, `/api` is proxied to `http://localhost:
 
 Copy `.env.example` → `.env.production` for local production builds.
 
-**Vercel (recommended):**
+**On Vercel:** API calls use same-origin `/api` (proxied to Render via `vercel.json`) — no CORS setup needed for the web app.
 
-1. **Environment variable:** `VITE_API_URL` = `https://haat-backend.onrender.com` (all environments)
-2. **Redeploy** after adding the variable (required — Vite bakes it at build time)
-3. **Fallback:** `vercel.json` also proxies `/api/*` → Render if the env var is missing
+**Optional:** Remove `VITE_API_URL` from Vercel if set; the app auto-detects `*.vercel.app` and uses the proxy.
 
-**Backend CORS** on Render must include your Vercel URL:
+**Backend CORS** (required if calling Render API directly from browser):
 
 ```env
 CORS_ORIGIN=https://haat-web-app.vercel.app,http://localhost:5173
