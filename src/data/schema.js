@@ -30,7 +30,19 @@ export function enrich(l) {
   const availCab = Math.max(0, Math.round(totalCab * 0.4));
   const hasParking = l.amenities.includes('Parking');
   const slug = l.operator.toLowerCase().replace(/[^a-z]/g, '');
-  const pin = (l.city === 'Bangalore' ? 560000 : l.city === 'Mumbai' ? 400000 : l.city === 'Hyderabad' ? 500000 : l.city === 'Pune' ? 411000 : l.city === 'Chennai' ? 600000 : 110000) + (h % 95);
+  const pin = (
+    l.city === 'Bangalore' ? 560000
+    : l.city === 'Mumbai' ? 400000
+    : l.city === 'Hyderabad' ? 500000
+    : l.city === 'Pune' ? 411000
+    : l.city === 'Chennai' ? 600000
+    : l.city === 'Ahmedabad' ? 380000
+    : l.city === 'Jaipur' ? 302000
+    : l.city === 'Lucknow' ? 226000
+    : l.city === 'Indore' ? 452000
+    : l.city === 'Gurugram' || l.city === 'Noida' || l.city === 'Delhi' ? 110000
+    : 110000
+  ) + (h % 95);
 
   return {
     identity: {
@@ -121,7 +133,7 @@ export const INV_SCHEMA = [
   { id: 'A', icon: 'MapPin', title: 'Identity & Location', tag: 'static', fields: [
     { p: 'core.operator',          l: 'Operator', req: true, ph: 'e.g. Awfis' },
     { p: 'identity.centreName',    l: 'Centre name', ph: 'auto if blank' },
-    { p: 'core.city',              l: 'City', t: 'select', req: true, opts: () => ['Bangalore','Mumbai','Delhi NCR','Hyderabad','Pune','Chennai'] },
+    { p: 'core.city',              l: 'City', t: 'select', req: true, opts: () => ['Gurugram','Noida','Delhi','Bangalore','Mumbai','Pune','Hyderabad','Ahmedabad','Jaipur','Chennai','Lucknow','Indore'] },
     { p: 'core.micro',             l: 'Micro-market', req: true, ph: 'e.g. Koramangala' },
     { p: 'identity.address',       l: 'Full address', t: 'textarea', full: true, ph: 'Building, street, area, city, PIN' },
     { p: 'identity.mapsLink',      l: 'Google Maps link', full: true, ph: 'maps.google.com/…' },

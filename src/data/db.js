@@ -27,7 +27,7 @@ function A(kind, who, text, sub, mins) { return { kind, who, text, sub, mins }; 
 
 export const DB = {
   me: { name: 'Rohit Mehra', city: 'Bangalore' },
-  cities: ['All cities','Bangalore','Mumbai','Delhi NCR','Hyderabad','Pune','Chennai'],
+  cities: ['All cities','Gurugram','Noida','Delhi','Bangalore','Mumbai','Pune','Hyderabad','Ahmedabad','Jaipur','Chennai','Lucknow','Indore'],
 
   kpis: {
     active: 1284,
@@ -47,10 +47,10 @@ export const DB = {
     L('alt.f','Mumbai','BKC','Private cabin',12,14500,2,['Wi-Fi','Parking','Reception','Meeting rooms','AC'],'Premium','Available now'),
     L('Smartworks','Mumbai','Andheri East','Dedicated desk',35,11000,11,['Wi-Fi','Cafeteria','Parking','24x7 access'],'Standard','Available now'),
     L('Table Space','Mumbai','Lower Parel','Managed office',80,13200,5,['Wi-Fi','Parking','Cafeteria','Gym','Reception','Phone booths'],'Premium','From 15 Jul'),
-    L('Innov8','Delhi NCR','Cyber City, Gurgaon','Private cabin',16,12000,1,['Wi-Fi','Parking','Cafeteria','Metro <5min','24x7 access'],'Premium','Available now'),
-    L('WeWork','Delhi NCR','Golf Course Road','Dedicated desk',30,12800,4,['Wi-Fi','Cafeteria','Gym','Reception','Phone booths','AC'],'Premium','Available now'),
-    L('Awfis','Delhi NCR','Sector 62, Noida','Hot desk',50,4800,16,['Wi-Fi','Parking','AC','Pantry'],'Standard','Available now'),
-    L('Smartworks','Delhi NCR','Sector 142, Noida','Managed office',120,5200,7,['Wi-Fi','Parking','Cafeteria','24x7 access','Reception'],'Standard','From 1 Aug'),
+    L('Innov8','Gurugram','Cyber City, Gurgaon','Private cabin',16,12000,1,['Wi-Fi','Parking','Cafeteria','Metro <5min','24x7 access'],'Premium','Available now'),
+    L('WeWork','Gurugram','Golf Course Road','Dedicated desk',30,12800,4,['Wi-Fi','Cafeteria','Gym','Reception','Phone booths','AC'],'Premium','Available now'),
+    L('Awfis','Noida','Sector 62, Noida','Hot desk',50,4800,16,['Wi-Fi','Parking','AC','Pantry'],'Standard','Available now'),
+    L('Smartworks','Noida','Sector 142, Noida','Managed office',120,5200,7,['Wi-Fi','Parking','Cafeteria','24x7 access','Reception'],'Standard','From 1 Aug'),
     L('IndiQube','Hyderabad','HITEC City','Private cabin',20,8800,3,['Wi-Fi','Parking','Cafeteria','Meeting rooms'],'Premium','Available now'),
     L('CoWrks','Hyderabad','Gachibowli','Dedicated desk',28,7600,12,['Wi-Fi','Cafeteria','Parking','Phone booths'],'Standard','Available now'),
     L('91Springboard','Pune','Baner','Hot desk',45,4600,6,['Wi-Fi','Cafeteria','AC','Parking'],'Standard','Available now'),
@@ -58,7 +58,7 @@ export const DB = {
     L('Workafella','Chennai','Guindy','Managed office',55,6400,19,['Wi-Fi','Parking','Cafeteria','Reception'],'Standard','From 10 Jul'),
     L('IndiQube','Chennai','OMR','Dedicated desk',32,5900,4,['Wi-Fi','Cafeteria','AC','Metro <5min'],'Standard','Available now'),
     L('Smartworks','Bangalore','Outer Ring Road','Managed office',95,8100,1,['Wi-Fi','Parking','Cafeteria','Gym','Reception','24x7 access','Phone booths'],'Premium','Available now'),
-    L('alt.f','Delhi NCR','Connaught Place','Private cabin',10,15500,8,['Wi-Fi','Reception','Meeting rooms','Metro <5min','AC'],'Premium','Available now'),
+    L('alt.f','Delhi','Connaught Place','Private cabin',10,15500,8,['Wi-Fi','Reception','Meeting rooms','Metro <5min','AC'],'Premium','Available now'),
     L('NestAway Work','Bangalore','Jayanagar','Hot desk',22,5000,28,['Wi-Fi','Cafeteria','AC'],'Standard','Available now'),
   ],
 
@@ -124,7 +124,7 @@ function makeInbox() {
       snippet:'Cyber City cabin 16 seats ready, 12k/seat, parking + metro',
       raw:`Cyber City cabin 16 seats ready to move, 12k/seat. Parking available, metro 3 min walk. Cafeteria + 24x7. Premium tower.`,
       att:null,
-      prof:{ operator:'Innov8', city:'Delhi NCR', micro:'Cyber City, Gurgaon', type:'Private cabin', isNew:false,
+      prof:{ operator:'Innov8', city:'Gurugram', micro:'Cyber City, Gurgaon', type:'Private cabin', isNew:false,
              centre:'Innov8 · Cyber City', address:'Building 8, DLF Cyber City, Gurgaon 122002',
              buildingType:'IT park', totalSeats:160, totalCabins:20, manager:'Karan Malhotra',
              amenities:['Parking','Metro <5min','Cafeteria','24x7 access','Wi-Fi'] },

@@ -31,7 +31,7 @@ const INITIAL_REQ = {
   tierPreference: 'any',
 };
 
-const CITIES = ['Bangalore', 'Mumbai', 'Delhi NCR', 'Hyderabad', 'Pune', 'Chennai'];
+const CITIES = ['Gurugram', 'Noida', 'Delhi', 'Bangalore', 'Mumbai', 'Pune', 'Hyderabad', 'Ahmedabad', 'Jaipur', 'Chennai', 'Lucknow', 'Indore'];
 const AMENITY_OPTIONS = [
   'Wi-Fi', 'Parking', 'Cafeteria', 'Meeting rooms', '24x7 access', 'AC',
   'Reception', 'Phone booths', 'Gym', 'Metro <5min',
