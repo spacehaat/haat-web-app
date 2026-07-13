@@ -6,6 +6,7 @@ import {
   Calendar, Users, IndianRupee, Building2, Trash2,
 } from 'lucide-react';
 import LeadFormModal from '../components/LeadFormModal.jsx';
+import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 import { useApp } from '../store/AppContext.jsx';
 import {
   apiAddLeadNote, apiDeleteLead, apiGetLead, apiListLeadAssignees, apiListLeads, apiUpdateLead,
@@ -122,6 +123,8 @@ export default function Leads() {
   const [formOpen, setFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [pasteMode, setPasteMode] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [assigneeOptions, setAssigneeOptions] = useState([]);
   const [detailAssignees, setDetailAssignees] = useState([]);
 
@@ -214,17 +217,24 @@ export default function Leads() {
     setFormOpen(true);
   };
 
-  const handleDeleteLead = async () => {
+  const handleDeleteLead = () => {
     if (!detail) return;
-    const label = detail.name || detail.company || 'this lead';
-    if (!window.confirm(`Delete lead “${label}”? This cannot be undone.`)) return;
+    setConfirmDelete(true);
+  };
+
+  const confirmDeleteLead = async () => {
+    if (!detail) return;
+    setDeleting(true);
     try {
       await apiDeleteLead(detail.id);
+      setConfirmDelete(false);
       setDetail(null);
       await fetchPage();
       toast('Lead deleted', 'trash-2');
     } catch (e) {
       toast(e?.message || 'Could not delete lead', 'info');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -695,6 +705,18 @@ export default function Leads() {
           </aside>
         </div>
       )}
+
+      <ConfirmDialog
+        open={confirmDelete && Boolean(detail)}
+        title="Delete lead"
+        message={detail
+          ? `Delete “${detail.name || detail.company || 'this lead'}”? This cannot be undone.`
+          : ''}
+        confirmLabel="Delete"
+        busy={deleting}
+        onCancel={() => { if (!deleting) setConfirmDelete(false); }}
+        onConfirm={confirmDeleteLead}
+      />
     </div>
   );
 }

@@ -12,6 +12,7 @@ import { isAdmin } from '../utils/access.js';
 import InventoryWizard from '../components/InventoryWizard.jsx';
 import GalleryModal from '../components/GalleryModal.jsx';
 import ListingDetailModal from '../components/ListingDetailModal.jsx';
+import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 
 const INITIAL_FILTER = {
   type: 'All',
@@ -70,6 +71,9 @@ export default function Browser() {
   const [galleryListing, setGalleryListing] = useState(null);
   const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [pageCount, setPageCount] = useState(1);
@@ -200,16 +204,23 @@ export default function Browser() {
     await Promise.all([fetchPage(), refreshListings()]);
   };
 
-  const handleDeleteListing = async (listing) => {
-    const label = `${listing.operator} · ${listing.micro}`;
-    if (!window.confirm(`Delete listing “${label}”? This cannot be undone.`)) return;
+  const handleDeleteListing = (listing) => {
+    setDeleteTarget(listing);
+  };
+
+  const confirmDeleteListing = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
     try {
-      await deleteListing(listing.id);
-      setDetail((d) => (d && d.id === listing.id ? null : d));
-      setGalleryListing((g) => (g && g.id === listing.id ? null : g));
+      await deleteListing(deleteTarget.id);
+      setDetail((d) => (d && d.id === deleteTarget.id ? null : d));
+      setGalleryListing((g) => (g && g.id === deleteTarget.id ? null : g));
+      setDeleteTarget(null);
       await fetchPage();
     } catch {
       // toast already shown
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -619,6 +630,18 @@ export default function Browser() {
           onListingUpdated={handleGallerySaved}
         />
       )}
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="Delete listing"
+        message={deleteTarget
+          ? `Delete “${deleteTarget.operator} · ${deleteTarget.micro}”? This cannot be undone.`
+          : ''}
+        confirmLabel="Delete"
+        busy={deleting}
+        onCancel={() => { if (!deleting) setDeleteTarget(null); }}
+        onConfirm={confirmDeleteListing}
+      />
     </div>
   );
 }

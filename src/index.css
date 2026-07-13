@@ -803,6 +803,7 @@ textarea.inp { resize: vertical; line-height: 1.55; }
 
 /* ---- manual add / edit inventory form ---- */
 .modal.modal-wide { width: 820px; }
+.modal.modal-sm { width: 420px; }
 .inv-form { padding: 0; }
 
 /* —— wizard shell —— */
