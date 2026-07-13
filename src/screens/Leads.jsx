@@ -3,14 +3,14 @@ import {
   ChevronLeft, ChevronRight, Loader2, MapPin, MessageSquarePlus,
   Search, UserRound, X, Layers, FileText, Clock, Mail, Phone,
   Plus, Pencil, ClipboardPaste, UserCheck, Filter, RotateCcw,
-  Calendar, Users, IndianRupee, Building2,
+  Calendar, Users, IndianRupee, Building2, Trash2,
 } from 'lucide-react';
 import LeadFormModal from '../components/LeadFormModal.jsx';
 import { useApp } from '../store/AppContext.jsx';
 import {
-  apiAddLeadNote, apiGetLead, apiListLeadAssignees, apiListLeads, apiUpdateLead,
+  apiAddLeadNote, apiDeleteLead, apiGetLead, apiListLeadAssignees, apiListLeads, apiUpdateLead,
 } from '../utils/api.js';
-import { canAssignLeads } from '../utils/access.js';
+import { canAssignLeads, isAdmin } from '../utils/access.js';
 
 const PAGE_SIZE = 20;
 
@@ -101,6 +101,7 @@ function RequirementCell({ lead }) {
 export default function Leads() {
   const { cityFilter, authUser, toast, go } = useApp();
   const canAssign = canAssignLeads(authUser);
+  const admin = isAdmin(authUser);
 
   const defaultCity = cityFilter && cityFilter !== 'All cities' ? cityFilter : 'Bangalore';
 
@@ -211,6 +212,20 @@ export default function Leads() {
     setPasteMode(false);
     setDetail(null);
     setFormOpen(true);
+  };
+
+  const handleDeleteLead = async () => {
+    if (!detail) return;
+    const label = detail.name || detail.company || 'this lead';
+    if (!window.confirm(`Delete lead “${label}”? This cannot be undone.`)) return;
+    try {
+      await apiDeleteLead(detail.id);
+      setDetail(null);
+      await fetchPage();
+      toast('Lead deleted', 'trash-2');
+    } catch (e) {
+      toast(e?.message || 'Could not delete lead', 'info');
+    }
   };
 
   const handleSaved = async (item) => {
@@ -507,6 +522,11 @@ export default function Leads() {
                       <button className="btn sm" onClick={openEdit} aria-label="Edit lead">
                         <Pencil /> Edit
                       </button>
+                      {admin ? (
+                        <button className="btn sm danger" onClick={handleDeleteLead} aria-label="Delete lead">
+                          <Trash2 /> Delete
+                        </button>
+                      ) : null}
                       <button className="icon-btn lead-drawer-close" onClick={() => setDetail(null)} aria-label="Close">
                         <X />
                       </button>

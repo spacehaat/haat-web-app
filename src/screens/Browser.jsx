@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, LayoutGrid, List, SearchX, Pencil, Eye, Check, X, SlidersHorizontal, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { Plus, LayoutGrid, List, SearchX, Pencil, Eye, Check, X, SlidersHorizontal, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { useApp } from '../store/AppContext.jsx';
 import FreshBadge from '../components/ui/FreshBadge.jsx';
 import Modal from '../components/ui/Modal.jsx';
@@ -8,6 +8,7 @@ import { inr, coverImg } from '../utils/helpers.js';
 import { profileOf } from '../data/schema.js';
 import { BUILDING_TYPES, SPACE_TYPES, AMEN } from '../data/db.js';
 import { apiGetListing, apiListListings } from '../utils/api.js';
+import { isAdmin } from '../utils/access.js';
 import InventoryWizard from '../components/InventoryWizard.jsx';
 import GalleryModal from '../components/GalleryModal.jsx';
 import ListingDetailModal from '../components/ListingDetailModal.jsx';
@@ -53,9 +54,10 @@ function buildApiFilters(bFilter, cityFilter, search, page) {
 
 export default function Browser() {
   const {
-    cityFilter, searchQuery,
-    proposalIds, addToProposal, removeFromProposal, requestUpdate, saveListing, refreshListings, toast,
+    cityFilter, searchQuery, authUser,
+    proposalIds, addToProposal, removeFromProposal, requestUpdate, saveListing, deleteListing, refreshListings, toast,
   } = useApp();
+  const admin = isAdmin(authUser);
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -196,6 +198,19 @@ export default function Browser() {
   const handleRequestUpdate = async (listingId) => {
     await requestUpdate(listingId);
     await Promise.all([fetchPage(), refreshListings()]);
+  };
+
+  const handleDeleteListing = async (listing) => {
+    const label = `${listing.operator} · ${listing.micro}`;
+    if (!window.confirm(`Delete listing “${label}”? This cannot be undone.`)) return;
+    try {
+      await deleteListing(listing.id);
+      setDetail((d) => (d && d.id === listing.id ? null : d));
+      setGalleryListing((g) => (g && g.id === listing.id ? null : g));
+      await fetchPage();
+    } catch {
+      // toast already shown
+    }
   };
 
   const filterGroups = (
@@ -398,6 +413,15 @@ export default function Browser() {
                             <button className="btn sm" onClick={() => setDetail(l)}>
                               <Eye /> Details
                             </button>
+                            {admin ? (
+                              <button
+                                className="btn sm danger"
+                                title="Delete listing"
+                                onClick={() => handleDeleteListing(l)}
+                              >
+                                <Trash2 />
+                              </button>
+                            ) : null}
                             {inProposal ? (
                               <button
                                 className="btn sm danger"
@@ -575,6 +599,7 @@ export default function Browser() {
           onAddProposal={(id) => addToProposal(id)}
           onRemoveProposal={(id) => removeFromProposal(id)}
           onRequestUpdate={handleRequestUpdate}
+          onDelete={admin ? handleDeleteListing : undefined}
         />
       )}
 

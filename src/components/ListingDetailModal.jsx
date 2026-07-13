@@ -19,6 +19,7 @@ import {
   RefreshCw,
   Plus,
   Check,
+  Trash2,
 } from 'lucide-react';
 import FreshBadge from './ui/FreshBadge.jsx';
 import { profileOf } from '../data/schema.js';
@@ -63,6 +64,7 @@ export default function ListingDetailModal({
   onAddProposal,
   onRemoveProposal,
   onRequestUpdate,
+  onDelete,
 }) {
   const p = profileOf(listing);
   const I = p.identity || {};
@@ -307,6 +309,11 @@ export default function ListingDetailModal({
           <button className="btn" onClick={() => onEdit(listing)}>
             <Pencil /> Edit listing
           </button>
+          {onDelete ? (
+            <button className="btn danger" onClick={() => onDelete(listing)}>
+              <Trash2 /> Delete
+            </button>
+          ) : null}
           {proposalAdded ? (
             <>
               <button className="btn success" disabled>

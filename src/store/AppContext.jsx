@@ -5,6 +5,7 @@ import {
   apiCreateListing,
   apiUpdateListing,
   apiVerifyListing,
+  apiDeleteListing,
   apiGetProposalDraft,
   apiUpdateProposalDraft,
   apiSendProposal,
@@ -403,6 +404,21 @@ export function AppProvider({ children }) {
     }
   }, [refreshListings, toast]);
 
+  const deleteListing = useCallback(async (listingId) => {
+    try {
+      await apiDeleteListing(listingId);
+      dispatch({
+        type: 'LISTINGS',
+        listings: state.listings.filter((l) => l.id !== listingId && l._id !== listingId),
+      });
+      await refreshListings();
+      toast('Listing deleted', 'trash-2');
+    } catch (e) {
+      toast(e?.message || 'Failed to delete listing', 'info');
+      throw e;
+    }
+  }, [refreshListings, state.listings, toast]);
+
   const loadStoredProposal = useCallback(async (id) => {
     const result = await apiLoadProposalToDraft(id);
     applyDraft(dispatch, result.draft);
@@ -440,7 +456,7 @@ export function AppProvider({ children }) {
     addToProposal, removeFromProposal, reorderProposal,
     updateClient, updateCoverNote, updateCoverNoteIdx, updateProposalTitle,
     approveInboxItem, rejectInboxItem,
-    saveListing, saveGallery, requestUpdate, sendProposal,
+    saveListing, saveGallery, requestUpdate, deleteListing, sendProposal,
     refreshListings, refreshProposals, applyProposalDraft,
     login, logout, loadStoredProposal,
     dispatch,
@@ -449,7 +465,7 @@ export function AppProvider({ children }) {
     addToProposal, removeFromProposal, reorderProposal,
     updateClient, updateCoverNote, updateCoverNoteIdx, updateProposalTitle,
     approveInboxItem, rejectInboxItem,
-    saveListing, saveGallery, requestUpdate, sendProposal,
+    saveListing, saveGallery, requestUpdate, deleteListing, sendProposal,
     refreshListings, refreshProposals, applyProposalDraft,
     login, logout, loadStoredProposal,
   ]);
