@@ -7,125 +7,136 @@
      INTERNAL — never client-visible; shown only in Browser detail
    ============================================================ */
 
-import { BUILDING_TYPES, SPACE_TYPES, AMEN, freshOf } from './db.js';
-
-const _NAMES = ['Ananya Rao','Vikram Shetty','Priya Nair','Rahul Desai','Meera Iyer','Arjun Kapoor','Sneha Reddy','Karan Malhotra'];
-const _COMPETITORS = ['WeWork (2 floors)','Awfis · same block','IndiQube nearby','Smartworks across road','Table Space 500m','91Springboard adjacent'];
-const _EXPANSION = ['Adding 1 floor by Q4','New tower wing planned 2026','No near-term expansion','Second centre in same micro-market','Fit-out of 40 more seats underway'];
+import { BUILDING_TYPES, SPACE_TYPES, AMEN } from './db.js';
 
 export function _hash(s) {
   let h = 0;
   for (const c of String(s)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
   return h;
 }
-const _r2 = (n, step = 100) => Math.round(n / step) * step;
 
-export function enrich(l) {
-  const h = _hash(l.id + l.operator + l.micro);
-  const pick = (arr, salt = 0) => arr[(h + salt * 7) % arr.length];
-  const ded = l.price;
-  const totalSeats = l.seats + 14 + (h % 46);
-  const totalWk = Math.round(totalSeats * 0.7);
-  const totalCab = Math.max(1, Math.round(totalSeats / 9));
-  const availCab = Math.max(0, Math.round(totalCab * 0.4));
-  const hasParking = l.amenities.includes('Parking');
-  const slug = l.operator.toLowerCase().replace(/[^a-z]/g, '');
-  const pin = (
-    l.city === 'Bangalore' ? 560000
-    : l.city === 'Mumbai' ? 400000
-    : l.city === 'Hyderabad' ? 500000
-    : l.city === 'Pune' ? 411000
-    : l.city === 'Chennai' ? 600000
-    : l.city === 'Ahmedabad' ? 380000
-    : l.city === 'Jaipur' ? 302000
-    : l.city === 'Lucknow' ? 226000
-    : l.city === 'Indore' ? 452000
-    : l.city === 'Gurugram' || l.city === 'Noida' || l.city === 'Delhi' ? 110000
-    : 110000
-  ) + (h % 95);
+const EMPTY_PROFILE = {
+  identity: {},
+  capacity: {},
+  pricing: {},
+  salesIntel: {},
+  operations: {},
+  contactsMedia: {},
+};
 
-  return {
-    identity: {
-      centreName:    `${l.operator} · ${l.micro}`,
-      address:       `${100 + (h % 800)}, ${l.micro}, ${l.city} ${pin}`,
-      mapsLink:      `maps.google.com/?q=${encodeURIComponent(l.operator + ' ' + l.micro)}`,
-      nearestMetro:  pick(['Indiranagar','MG Road','Cyber City Rapid','HITEC City','Baner (proposed)','CP'], 1) + ` Metro · ${1 + (h % 9)} min`,
-      nearestRail:   pick(['City Jn','Cantt','Central','Secunderabad Jn','Pune Jn'], 2) + ` · ${2 + (h % 13)} km`,
-      floors:        pick(['Ground + 2 floors','3rd–5th floor','7th floor','2nd & 3rd floor','9th–11th floor'], 3),
-      buildingType:  pick(BUILDING_TYPES, 4),
-      ownership:     pick(['Leased','Developer-owned','Managed lease'], 5),
-      entranceFacing:pick(['North','East','North-East','West'], 6),
-      zoning:        pick(['Commercial','SEZ','IT / ITES','Mixed-use'], 7),
-      vastu:         (h % 3 !== 0),
-      superBuiltUp:  _r2(1200 + totalSeats * 98, 50),
-      carpet:        _r2(950 + totalSeats * 74, 50),
-      layoutType:    pick(['Open-plan','Cabin-heavy','Mixed open + cabins','Hybrid'], 8),
-      deskSize:      pick(['4 × 2 ft','5 × 2.5 ft','L-shaped, 5 ft'], 9),
-    },
-    capacity: {
-      totalSeats, totalWorkstations: totalWk,
-      totalCabins: totalCab, cabinSeatsEach: 4,
-      meetingRooms: 1 + (h % 4), meetingRoomSeats: 6,
-      conferenceRooms: (h % 2) + 1, conferenceSeats: 12 + (h % 2) * 4,
-      availWorkstations: l.seats,
-      availCabins: availCab, availCabinSeats: 4,
-      hotDeskAvailable: (l.type === 'Hot desk') || (h % 2 === 0),
-      hotDeskCount: l.type === 'Hot desk' ? l.seats : (h % 12),
-    },
-    pricing: {
-      hotDesk:         _r2(ded * 0.55),
-      dedicatedDesk:   ded,
-      privateCabin:    _r2(ded * 1.16),
-      confRoomHour:    _r2(700 + (h % 6) * 100),
-      confRoomDay:     _r2(4500 + (h % 6) * 500, 500),
-      meetingRoomHour: _r2(450 + (h % 4) * 100),
-      dayPass:         _r2(350 + (h % 4) * 50, 50),
-      managedPerSqft:  85 + (h % 45),
-      carParking:      _r2(2500 + (h % 6) * 500, 500),
-      twoWheeler:      _r2(700 + (h % 4) * 100),
-      beyondHours:     `Included till 10 PM · ₹${150 + (h % 3) * 50}/hr after`,
-      signageBoard:    _r2(5000 + (h % 4) * 1000, 500),
-      securityDeposit: `${2 + (h % 4)} months`,
-      noticePeriod:    pick(['1 month','2 months','3 months'], 10),
-    },
-    salesIntel: {
-      pitchingPrice:     _r2(ded * 1.12),
-      closingPrice:      ded,
-      yoyIncrement:      `${6 + (h % 9)}%`,
-      competitors:       [pick(_COMPETITORS, 11), pick(_COMPETITORS, 12)].filter((v, i, a) => a.indexOf(v) === i),
-      expansionPlans:    pick(_EXPANSION, 13),
-      commissionAccount: `Spacehaat Brokerage · A/C ····${1000 + (h % 8999)} · ${pick(['8%','9%','10%','12%'], 14)} of first-year value`,
-    },
-    operations: {
-      timings:  '9:00 AM – 9:00 PM',
-      daysOpen: pick(['Mon – Sat','Mon – Fri','All days'], 15),
-      sundayVisits: (h % 2 === 0),
-      managedOfficeAvailable: (l.type === 'Managed office') || (h % 3 === 0),
-      virtualOfficeAvailable: (h % 2 === 1),
-    },
-    contactsMedia: {
-      centerManager:    { name: pick(_NAMES, 16), phone: `+91 98${100 + (h % 899)} ${10000 + (h % 89999)}` },
-      communityManager: { name: pick(_NAMES, 17), phone: `+91 99${100 + (h % 899)} ${10000 + (h % 89999)}` },
-      salesPhone:  `+91 80 ${4000 + (h % 5999)} 0${100 + (h % 899)}`,
-      salesEmail:  `sales.${l.micro.toLowerCase().replace(/[^a-z]/g, '')}@${slug}.in`,
-      accountEmail:`accounts@${slug}.in`,
-      carParkingAvailable: hasParking,
-      carParkingSpaces: hasParking ? 10 + (h % 50) : 0,
-      twoWheelerSpaces: 20 + (h % 70),
-      extraAmenities: l.amenities,
-      gallery: ['Reception / lobby','Workstation bay','Cabin interior','Cafeteria'],
-      brochure:  `${slug}_${l.micro.replace(/\W/g, '')}_brochure.pdf`,
-      website:   `${slug}.in`,
-      instagram: `@${slug}.spaces`,
-      linkedin:  `linkedin.com/company/${slug}`,
-      virtualTour: `youtu.be/tour-${l.id.toLowerCase()}`,
-    },
-  };
+/** Return stored profile only — never invent demo values. */
+export function profileOf(l) {
+  if (!l) return { ...EMPTY_PROFILE };
+  if (l.profile && typeof l.profile === 'object') return l.profile;
+  return { ...EMPTY_PROFILE };
 }
 
-export function profileOf(l) {
-  if (!l.profile) l.profile = enrich(l);
-  return l.profile;
+/** @deprecated No longer fabricates data. */
+export function enrich(_l) {
+  return profileOf(null);
+}
+
+function getNested(obj, path) {
+  if (!obj || !path) return undefined;
+  return path.split('.').reduce((cur, key) => (cur == null ? undefined : cur[key]), obj);
+}
+
+function setNested(obj, path, value) {
+  const parts = path.split('.');
+  let cur = obj;
+  for (let i = 0; i < parts.length - 1; i += 1) {
+    if (!cur[parts[i]] || typeof cur[parts[i]] !== 'object') cur[parts[i]] = {};
+    cur = cur[parts[i]];
+  }
+  cur[parts[parts.length - 1]] = value;
+}
+
+function schemaFieldPaths(schema = INV_SCHEMA) {
+  const paths = [];
+  for (const group of schema) {
+    for (const field of group.fields || []) {
+      if (field.p) paths.push(field.p);
+    }
+  }
+  return paths;
+}
+
+function readListingPath(listing, path) {
+  if (!listing) return undefined;
+  if (path.startsWith('core.')) return listing[path.slice(5)];
+  if (path === 'images') return listing.images;
+  return getNested(listing.profile, path);
+}
+
+function coerceFieldValue(field, raw) {
+  if (raw === undefined || raw === null || raw === '') return undefined;
+  if (field.t === 'toggle') return Boolean(raw);
+  if (field.t === 'num' || field.t === 'inr') {
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+  }
+  if (field.t === 'list') {
+    if (Array.isArray(raw)) return raw.filter(Boolean);
+    return String(raw).split('\n').map((s) => s.trim()).filter(Boolean);
+  }
+  if (field.t === 'chips') return Array.isArray(raw) ? raw : [];
+  return raw;
+}
+
+/** Build wizard draft from a stored listing (only real values). */
+export function listingToDraft(listing) {
+  const draft = {};
+  if (!listing) return draft;
+  for (const path of schemaFieldPaths()) {
+    const val = readListingPath(listing, path);
+    if (val !== undefined && val !== null && val !== '') draft[path] = val;
+  }
+  if (listing.tier) draft['core.tier'] = listing.tier;
+  return draft;
+}
+
+/**
+ * Convert wizard draft → API payload.
+ * Only includes fields the user actually filled — no invented defaults.
+ */
+export function draftToListingPayload(draft) {
+  const payload = {
+    amenities: [],
+    source: 'manual',
+  };
+  const profile = {};
+
+  for (const group of INV_SCHEMA) {
+    for (const field of group.fields || []) {
+      if (!field.p || field.t === 'images') continue;
+      const coerced = coerceFieldValue(field, draft[field.p]);
+      if (coerced === undefined) continue;
+
+      if (field.p.startsWith('core.')) {
+        payload[field.p.slice(5)] = coerced;
+      } else {
+        setNested(profile, field.p, coerced);
+      }
+    }
+  }
+
+  if (draft['core.tier']) payload.tier = draft['core.tier'];
+  if (Object.keys(profile).length) payload.profile = profile;
+  return payload;
+}
+
+export function validateListingDraft(draft) {
+  const errors = [];
+  for (const group of INV_SCHEMA) {
+    for (const field of group.fields || []) {
+      if (!field.req) continue;
+      const val = draft[field.p];
+      if (val === undefined || val === null || val === '') {
+        errors.push(`${field.l} is required`);
+      }
+    }
+  }
+  return errors;
 }
 
 /* INV_SCHEMA — drives the 6-step Add/Edit inventory wizard */

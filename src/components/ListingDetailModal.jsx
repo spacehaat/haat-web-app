@@ -65,12 +65,12 @@ export default function ListingDetailModal({
   onRequestUpdate,
 }) {
   const p = profileOf(listing);
-  const I = p.identity;
-  const C = p.capacity;
-  const P = p.pricing;
-  const S = p.salesIntel;
-  const O = p.operations;
-  const F = p.contactsMedia;
+  const I = p.identity || {};
+  const C = p.capacity || {};
+  const P = p.pricing || {};
+  const S = p.salesIntel || {};
+  const O = p.operations || {};
+  const F = p.contactsMedia || {};
 
   const quickGallery = galleryPhotos(listing, profileOf);
   const fullGallery = allGalleryPhotos(listing, profileOf);

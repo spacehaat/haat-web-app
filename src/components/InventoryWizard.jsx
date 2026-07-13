@@ -11,33 +11,23 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useApp } from '../store/AppContext.jsx';
-import { INV_SCHEMA } from '../data/schema.js';
-import { SPACE_TYPES, AMEN, BUILDING_TYPES, uid, freshOf } from '../data/db.js';
+import {
+  INV_SCHEMA,
+  listingToDraft,
+  draftToListingPayload,
+  validateListingDraft,
+} from '../data/schema.js';
+import { AMEN } from '../data/db.js';
 
 const GROUP_ICONS = { A: MapPin, B: LayoutGrid, C: IndianRupee, D: Lock, E: Clock, F: Contact };
 
-function buildInitialDraft(l) {
-  if (!l) return {};
-  return {
-    'core.operator': l.operator,
-    'core.city': l.city,
-    'core.micro': l.micro,
-    'core.type': l.type,
-    'core.seats': l.seats,
-    'core.price': l.price,
-    'core.tier': l.tier,
-    'core.avail': l.avail,
-    'core.amenities': l.amenities,
-  };
-}
-
 export default function InventoryWizard({ editListing, onClose }) {
-  const { saveListing } = useApp();
+  const { saveListing, toast } = useApp();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState(() => buildInitialDraft(editListing));
+  const [draft, setDraft] = useState(() => listingToDraft(editListing));
 
   const get = (path) => draft[path] ?? '';
-  const set = (path, val) => setDraft(prev => ({ ...prev, [path]: val }));
+  const set = (path, val) => setDraft((prev) => ({ ...prev, [path]: val }));
 
   const groups = INV_SCHEMA;
   const group = groups[step];
@@ -47,24 +37,21 @@ export default function InventoryWizard({ editListing, onClose }) {
     return Math.round(((step + 1) / groups.length) * 100);
   }, [step, groups.length]);
 
-  const handleSave = () => {
-    const operator  = get('core.operator') || 'Unknown';
-    const city      = get('core.city') || 'Bangalore';
-    const micro     = get('core.micro') || '';
-    const type      = get('core.type') || SPACE_TYPES[0];
-    const seats     = parseInt(get('core.seats')) || 10;
-    const price     = parseInt(get('core.price')) || 7000;
-    const tier      = get('core.tier') || 'Standard';
-    const avail     = get('core.avail') || 'Available now';
-    const amenities = get('core.amenities') || [];
+  const handleSave = async () => {
+    const errors = validateListingDraft(draft);
+    if (errors.length) {
+      toast?.(errors[0], 'info');
+      return;
+    }
 
-    const listing = {
-      id: editListing ? editListing.id : uid(),
-      operator, city, micro, type, seats, price,
-      days: 0, amenities, tier, avail, fresh: freshOf(0),
-    };
+    const payload = draftToListingPayload(draft);
+    // Preserve existing images on edit unless gallery manages them separately
+    if (editListing?.images?.length && !payload.images) {
+      payload.images = editListing.images;
+      payload.photoMeta = editListing.photoMeta || [];
+    }
 
-    saveListing(listing, editListing?.id);
+    await saveListing(payload, editListing?.id);
     onClose();
   };
 
