@@ -166,8 +166,30 @@ export default function Browser() {
   };
   const toggleFlag = (flag) => setBFilter((prev) => ({ ...prev, [flag]: !prev[flag] }));
 
+  const syncListingInView = useCallback((saved) => {
+    if (!saved) return;
+    const normalized = normalizeListing(saved);
+    setItems((prev) => {
+      const idx = prev.findIndex((x) => x.id === normalized.id);
+      if (idx === -1) return [normalized, ...prev];
+      const next = [...prev];
+      next[idx] = normalized;
+      return next;
+    });
+    setDetail((d) => (d && d.id === normalized.id ? normalized : d));
+    setGalleryListing((g) => (g && g.id === normalized.id ? normalized : g));
+    setEditListing((e) => (e && e.id === normalized.id ? normalized : e));
+  }, []);
+
   const handleSaveListing = async (listing, editId) => {
-    await saveListing(listing, editId);
+    const saved = await saveListing(listing, editId);
+    syncListingInView(saved);
+    await Promise.all([fetchPage(), refreshListings()]);
+    return saved;
+  };
+
+  const handleGallerySaved = async (saved) => {
+    syncListingInView(saved);
     await Promise.all([fetchPage(), refreshListings()]);
   };
 
@@ -569,6 +591,7 @@ export default function Browser() {
           listing={galleryListing}
           onClose={() => setGalleryListing(null)}
           onBack={() => setGalleryListing(null)}
+          onListingUpdated={handleGallerySaved}
         />
       )}
     </div>

@@ -64,7 +64,17 @@ function schemaFieldPaths(schema = INV_SCHEMA) {
 function readListingPath(listing, path) {
   if (!listing) return undefined;
   if (path.startsWith('core.')) return listing[path.slice(5)];
-  if (path === 'images') return listing.images;
+  if (path === 'images') {
+    const imgs = listing.images || [];
+    if (!imgs.length) return undefined;
+    const meta = listing.photoMeta || [];
+    return imgs.map((src, i) => ({
+      src,
+      file: null,
+      label: meta[i]?.label || '',
+      price: meta[i]?.price ?? '',
+    }));
+  }
   return getNested(listing.profile, path);
 }
 

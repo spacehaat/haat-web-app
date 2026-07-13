@@ -168,12 +168,12 @@ function GalleryEditor({ listing, initialPhotos, onCancel, onSaved }) {
         }
       }
 
-      await saveGallery(
+      const saved = await saveGallery(
         listing.id,
         merged.map((p) => p.src),
         merged.map((p) => ({ label: p.label || '', price: p.price ?? '' })),
       );
-      onSaved(merged);
+      onSaved(merged, saved);
     } catch (e) {
       setUploadError(e?.message || 'Failed to upload images');
     } finally {
@@ -288,7 +288,7 @@ function GalleryEditor({ listing, initialPhotos, onCancel, onSaved }) {
   );
 }
 
-export default function GalleryModal({ listing: listingProp, onClose, onBack }) {
+export default function GalleryModal({ listing: listingProp, onClose, onBack, onListingUpdated }) {
   const { listings, addToProposal } = useApp();
   const listing = listings.find((l) => l.id === listingProp.id) || listingProp;
   const [mode, setMode] = useState('view');
@@ -316,18 +316,15 @@ export default function GalleryModal({ listing: listingProp, onClose, onBack }) 
             listing={listing}
             initialPhotos={photosFromListing(listing)}
             onCancel={() => setMode('view')}
-            onSaved={(updated) => {
-              setPhotos(updated.map((p, i) => {
-                const defs = allGalleryPhotos(listing, profileOf);
-                const d = defs[i] || {};
-                return {
-                  src: p.src,
-                  label: p.label || d.label || `Photo ${i + 1}`,
-                  price: p.price !== '' && p.price != null ? Number(p.price) : d.price,
-                  unit: d.unit || '/seat',
-                };
-              }));
+            onSaved={(updated, saved) => {
+              setPhotos(updated.map((p, i) => ({
+                src: p.src,
+                label: p.label || `Photo ${i + 1}`,
+                price: p.price !== '' && p.price != null ? Number(p.price) : undefined,
+                unit: '/seat',
+              })));
               setMode('view');
+              onListingUpdated?.(saved || { ...listing, images: updated.map((p) => p.src), photoMeta: updated });
             }}
           />
         )}

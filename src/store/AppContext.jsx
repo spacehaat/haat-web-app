@@ -366,24 +366,27 @@ export function AppProvider({ children }) {
       delete payload.days;
       delete payload.fresh;
 
-      if (editId) {
-        await apiUpdateListing(editId, payload);
-        toast('Listing updated successfully', 'check-circle');
-      } else {
-        await apiCreateListing(payload);
-        toast('Listing published — verified just now', 'badge-check');
-      }
+      const saved = editId
+        ? await apiUpdateListing(editId, payload)
+        : await apiCreateListing(payload);
+      toast(
+        editId ? 'Listing updated successfully' : 'Listing published — verified just now',
+        editId ? 'check-circle' : 'badge-check',
+      );
       await refreshListings();
+      return saved;
     } catch (e) {
       toast(e?.message || 'Failed to save listing', 'info');
+      throw e;
     }
   }, [refreshListings, toast]);
 
   const saveGallery = useCallback(async (listingId, images, photoMeta) => {
     try {
-      await apiUpdateListing(listingId, { images, photoMeta, source: 'manual' });
+      const saved = await apiUpdateListing(listingId, { images, photoMeta, source: 'manual' });
       await refreshListings();
       toast(`Gallery updated — ${images.length} photos`, 'check-circle');
+      return saved;
     } catch (e) {
       toast(e?.message || 'Failed to save gallery', 'info');
       throw e;
