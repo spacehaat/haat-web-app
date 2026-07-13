@@ -73,7 +73,6 @@ export default function Browser() {
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [pageCount, setPageCount] = useState(1);
