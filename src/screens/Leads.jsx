@@ -54,7 +54,10 @@ function formatDate(value) {
 
 function leadSubtitle(lead) {
   const parts = [];
-  if (lead.seats) parts.push(`${lead.seats} seats`);
+  const seatLabel = lead.seatRange?.trim()
+    ? `${lead.seatRange.trim()} seats`
+    : (lead.seats ? `${lead.seats} seats` : '');
+  if (seatLabel) parts.push(seatLabel);
   if (lead.microlocation) parts.push(lead.microlocation);
   else if (lead.city) parts.push(lead.city);
   return parts.join(' · ') || lead.displayTitle || '';
@@ -90,11 +93,11 @@ function LocationCell({ lead }) {
 
 function RequirementCell({ lead }) {
   const types = lead.interestedIn?.length ? lead.interestedIn.join(', ') : null;
-  if (!types && !lead.seats) return '—';
+  if (!types && !lead.seats && !lead.seatRange) return '—';
   return (
     <div className="lead-req-cell">
       {types ? <span>{types}</span> : null}
-      {lead.seats ? <small>{lead.seats} seats</small> : null}
+      {lead.seatRange ? <small>{lead.seatRange} seats</small> : (lead.seats ? <small>{lead.seats} seats</small> : null)}
     </div>
   );
 }
@@ -644,8 +647,8 @@ export default function Leads() {
                       {detail.city ? (
                         <div className="lead-req-item"><MapPin /><span>{detail.city}{detail.microlocation ? ` · ${detail.microlocation}` : ''}</span></div>
                       ) : null}
-                      {detail.seats ? (
-                        <div className="lead-req-item"><Users /><span>{detail.seats} seats</span></div>
+                      {(detail.seatRange || detail.seats) ? (
+                        <div className="lead-req-item"><Users /><span>{detail.seatRange ? `${detail.seatRange} seats` : `${detail.seats} seats`}</span></div>
                       ) : null}
                       {detail.budget ? (
                         <div className="lead-req-item"><IndianRupee /><span>≤ ₹{detail.budget}/seat</span></div>
