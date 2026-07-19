@@ -14,10 +14,21 @@ import GalleryModal from '../components/GalleryModal.jsx';
 import ListingDetailModal from '../components/ListingDetailModal.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 
+const MAX_PRICE_TIERS = [
+  { value: null, label: 'Any price' },
+  { value: 6000, label: '≤ ₹6k' },
+  { value: 8000, label: '≤ ₹8k' },
+  { value: 10000, label: '≤ ₹10k' },
+  { value: 12000, label: '≤ ₹12k' },
+  { value: 16000, label: '≤ ₹16k' },
+  { value: 20000, label: '≤ ₹20k' },
+  { value: 25000, label: '≤ ₹25k' },
+];
+
 const INITIAL_FILTER = {
   type: 'All',
   fresh: 'All',
-  maxPrice: 16000,
+  maxPrice: null,
   minSeats: 0,
   amenities: [],
   buildingType: 'All',
@@ -40,7 +51,7 @@ function buildApiFilters(bFilter, cityFilter, search, page) {
     type: bFilter.type,
     fresh: bFilter.fresh === 'All' ? undefined : bFilter.fresh,
     minSeats: bFilter.minSeats || undefined,
-    maxPrice: bFilter.maxPrice,
+    maxPrice: bFilter.maxPrice ?? undefined,
     amenities: bFilter.amenities.length ? bFilter.amenities : undefined,
     buildingType: bFilter.buildingType,
     virtualOffice: bFilter.virtualOffice || undefined,
@@ -152,7 +163,7 @@ export default function Browser() {
     (bFilter.type !== 'All' ? 1 : 0) +
     (bFilter.fresh !== 'All' ? 1 : 0) +
     (bFilter.minSeats !== 0 ? 1 : 0) +
-    (bFilter.maxPrice !== INITIAL_FILTER.maxPrice ? 1 : 0) +
+    (bFilter.maxPrice != null ? 1 : 0) +
     (bFilter.buildingType !== 'All' ? 1 : 0) +
     bFilter.amenities.length +
     (bFilter.hotDesk ? 1 : 0) +
@@ -272,19 +283,19 @@ export default function Browser() {
       </div>
 
       <div className="filt-grp">
-        <div className="filt-lab">
-          <span>Max price / seat</span>
-          <b className="tnum">{inr(bFilter.maxPrice)}</b>
+        <div className="filt-lab">Max price / seat</div>
+        <div className="filt-opts">
+          {MAX_PRICE_TIERS.map(({ value, label }) => (
+            <button
+              key={label}
+              type="button"
+              className={`filt-opt ${(bFilter.maxPrice ?? null) === value ? 'on' : ''}`}
+              onClick={() => setSingleFilter('maxPrice', value)}
+            >
+              {label}
+            </button>
+          ))}
         </div>
-        <input
-          type="range"
-          min="4000"
-          max="16000"
-          step="500"
-          className="range"
-          value={bFilter.maxPrice}
-          onChange={(e) => setSingleFilter('maxPrice', Number(e.target.value))}
-        />
       </div>
 
       <div className="filt-grp">
