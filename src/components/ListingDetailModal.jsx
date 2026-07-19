@@ -13,8 +13,6 @@ import {
   Share2,
   Link,
   Play,
-  Image,
-  Maximize2,
   Pencil,
   RefreshCw,
   Plus,
@@ -22,8 +20,9 @@ import {
   Trash2,
 } from 'lucide-react';
 import FreshBadge from './ui/FreshBadge.jsx';
+import ListingGalleryCarousel from './ListingGalleryCarousel.jsx';
 import { profileOf } from '../data/schema.js';
-import { coverImg, inr, galleryPhotos, allGalleryPhotos } from '../utils/helpers.js';
+import { coverImg, inr, allGalleryPhotos } from '../utils/helpers.js';
 
 function kv(label, value, dynamic = false) {
   const safe = value === undefined || value === null || value === '' ? '—' : value;
@@ -74,11 +73,14 @@ export default function ListingDetailModal({
   const O = p.operations || {};
   const F = p.contactsMedia || {};
 
-  const quickGallery = galleryPhotos(listing, profileOf);
-  const fullGallery = allGalleryPhotos(listing, profileOf);
-  const hero = quickGallery[0] || fullGallery[0];
-  const rest = quickGallery.slice(1, 5);
-  const more = Math.max(fullGallery.length - (1 + rest.length), 0);
+  const gallery = allGalleryPhotos(listing, profileOf);
+  const carouselPhotos = gallery.length
+    ? gallery
+    : [{
+      src: coverImg(listing),
+      label: listing.type,
+      caption: `${listing.operator} · ${listing.micro}`,
+    }];
 
   const [openSections, setOpenSections] = useState({
     A: true,
@@ -107,7 +109,11 @@ export default function ListingDetailModal({
         </div>
 
         <div className="modal-body dv-modal">
-          <img className="dv-hero" src={coverImg(listing, 640, 300)} alt={`${listing.operator} ${listing.micro}`} />
+          <ListingGalleryCarousel
+            photos={carouselPhotos}
+            onOpenGallery={() => onGallery(listing)}
+          />
+
           <div className="dv-quick">
             <div>
               <span>Seats available</span>
@@ -236,7 +242,7 @@ export default function ListingDetailModal({
           <Section
             section="F"
             icon={Contact}
-            title="F · Contacts, Amenities & Media"
+            title="F · Contacts & Amenities"
             tag="static"
             open={openSections.F}
             onToggle={() => toggleSection('F')}
@@ -258,39 +264,7 @@ export default function ListingDetailModal({
               ))}
             </div>
 
-            {hero ? (
-              <>
-                <div className="dv-sub2">Photo gallery</div>
-                <div className="gal">
-                  <div className="gal-hero" onClick={() => onGallery(listing)}>
-                    <img src={hero.src} alt={hero.label} />
-                    <span className="gal-tag">Hero photo</span>
-                    <div className="gal-hero-cap">{hero.caption || listing.type}</div>
-                  </div>
-
-                  <div className="gal-grid">
-                    {rest.map((ph, idx) => (
-                      <figure className="gal-cell" key={`${ph.src}-${idx}`} onClick={() => onGallery(listing)}>
-                        <div className="gal-thumb">
-                          <img src={ph.src} alt={ph.label} />
-                          <button className="gal-act" title="View gallery"><Maximize2 /></button>
-                        </div>
-                        <figcaption className="gal-cap">
-                          <span>{ph.label}</span>
-                          {ph.price ? <b className="gal-price">{inr(ph.price)}<small>/seat</small></b> : null}
-                        </figcaption>
-                      </figure>
-                    ))}
-                  </div>
-
-                  <button className="gal-more" onClick={() => onGallery(listing)}>
-                    <Image /> {more > 0 ? `+${more} more photos in gallery` : 'View full gallery'}
-                  </button>
-                </div>
-              </>
-            ) : null}
-
-            <div className="dv-sub2" style={{ marginTop: 16 }}>Links</div>
+            <div className="dv-sub2">Links</div>
             <div className="dv-links">
               <span className="chip"><FileText /> {F.brochure || 'Brochure'}</span>
               <span className="chip"><Globe /> {F.website || 'Website'}</span>

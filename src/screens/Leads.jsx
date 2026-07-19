@@ -12,6 +12,11 @@ import {
   apiAddLeadNote, apiDeleteLead, apiGetLead, apiListLeadAssignees, apiListLeads, apiUpdateLead,
 } from '../utils/api.js';
 import { canAssignLeads, isAdmin } from '../utils/access.js';
+import {
+  resolveLeadDateRange,
+  WEB_DATE_FILTERS,
+  leadDateFilterLabel,
+} from '../utils/leadDateFilter.js';
 
 const PAGE_SIZE = 20;
 
@@ -114,6 +119,10 @@ export default function Leads() {
   const [stageFilter, setStageFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
+  const [dateFilter, setDateFilter] = useState('this_month');
+  const [customDateFrom, setCustomDateFrom] = useState('');
+  const [customDateTo, setCustomDateTo] = useState('');
+  const [stageCounts, setStageCounts] = useState({});
   const [page, setPage] = useState(1);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
@@ -145,7 +154,12 @@ export default function Leads() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, stageFilter, sourceFilter, cityFilter, assigneeFilter]);
+  }, [searchQuery, stageFilter, sourceFilter, cityFilter, assigneeFilter, dateFilter, customDateFrom, customDateTo]);
+
+  const dateRange = useMemo(
+    () => resolveLeadDateRange(dateFilter, { from: customDateFrom, to: customDateTo }),
+    [dateFilter, customDateFrom, customDateTo],
+  );
 
   const fetchPage = useCallback(async () => {
     setLoading(true);
@@ -158,21 +172,26 @@ export default function Leads() {
         source: sourceFilter,
         city: cityFilter,
         assignee: assigneeFilter,
+        dateFrom: dateRange.dateFrom,
+        dateTo: dateRange.dateTo,
       });
       setItems(data.items || []);
       setTotal(data.total ?? 0);
       setPageCount(data.pageCount ?? 1);
+      setStageCounts(data.stageCounts || {});
     } catch (e) {
       toast(e?.message || 'Failed to load leads', 'info');
     } finally {
       setLoading(false);
     }
-  }, [page, searchQuery, stageFilter, sourceFilter, cityFilter, assigneeFilter, toast]);
+  }, [page, searchQuery, stageFilter, sourceFilter, cityFilter, assigneeFilter, dateRange, toast]);
 
   useEffect(() => { fetchPage(); }, [fetchPage]);
 
   const hasActiveFilters = Boolean(
     searchQuery || stageFilter || sourceFilter || assigneeFilter
+    || dateFilter !== 'this_month'
+    || (dateFilter === 'custom' && (customDateFrom || customDateTo))
     || (cityFilter && cityFilter !== 'All cities'),
   );
 
@@ -182,6 +201,9 @@ export default function Leads() {
     setStageFilter('');
     setSourceFilter('');
     setAssigneeFilter('');
+    setDateFilter('this_month');
+    setCustomDateFrom('');
+    setCustomDateTo('');
   };
 
   const openDetail = async (id) => {
@@ -301,11 +323,7 @@ export default function Leads() {
     return pages;
   }, [pageCount, currentPage]);
 
-  const stageCounts = useMemo(() => {
-    const counts = {};
-    for (const lead of items) counts[lead.stage] = (counts[lead.stage] || 0) + 1;
-    return counts;
-  }, [items]);
+  const dateFilterLabel = leadDateFilterLabel(dateFilter, WEB_DATE_FILTERS);
 
   return (
     <div className="leads-screen">
@@ -334,6 +352,10 @@ export default function Leads() {
         <div className="leads-stat">
           <b className="tnum">{total}</b>
           <span>{hasActiveFilters ? 'Matching leads' : 'Total leads'}</span>
+        </div>
+        <div className="leads-stat">
+          <b>{dateFilterLabel}</b>
+          <span>Date range</span>
         </div>
         {cityFilter && cityFilter !== 'All cities' ? (
           <div className="leads-stat">
@@ -374,6 +396,36 @@ export default function Leads() {
         </div>
 
         <div className="leads-filter-row">
+          <label className="leads-filter-field">
+            <span><Calendar /> Date</span>
+            <select className="inp" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)}>
+              {WEB_DATE_FILTERS.map(([value, label]) => (
+                <option key={value} value={value}>{label}</option>
+              ))}
+            </select>
+          </label>
+          {dateFilter === 'custom' ? (
+            <>
+              <label className="leads-filter-field">
+                <span>From</span>
+                <input
+                  type="date"
+                  className="inp"
+                  value={customDateFrom}
+                  onChange={(e) => setCustomDateFrom(e.target.value)}
+                />
+              </label>
+              <label className="leads-filter-field">
+                <span>To</span>
+                <input
+                  type="date"
+                  className="inp"
+                  value={customDateTo}
+                  onChange={(e) => setCustomDateTo(e.target.value)}
+                />
+              </label>
+            </>
+          ) : null}
           <label className="leads-filter-field">
             <span><Filter /> Stage</span>
             <select className="inp" value={stageFilter} onChange={(e) => setStageFilter(e.target.value)}>

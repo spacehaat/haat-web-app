@@ -1,7 +1,7 @@
-import { canSeeScreen } from '@spacehaat/access';
+import { canSeeScreen, defaultPathForUser } from '@spacehaat/access';
 import { getLastRoute } from './navigation.js';
 
-export { defaultPathForUser } from '@spacehaat/access';
+export { defaultPathForUser };
 
 export const PATHS = {
   login: '/login',
