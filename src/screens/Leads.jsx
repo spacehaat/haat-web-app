@@ -6,10 +6,11 @@ import {
   Calendar, Users, IndianRupee, Building2, Trash2,
 } from 'lucide-react';
 import LeadFormModal from '../components/LeadFormModal.jsx';
+import LeadReminderPanel from '../components/LeadReminderPanel.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 import { useApp } from '../store/AppContext.jsx';
 import {
-  apiAddLeadNote, apiDeleteLead, apiGetLead, apiListLeadAssignees, apiListLeads, apiUpdateLead,
+  apiAddLeadNote, apiDeleteLead, apiGetLead, apiListLeadAssignees, apiListLeads, apiSetLeadReminder, apiUpdateLead,
 } from '../utils/api.js';
 import { canAssignLeads, isAdmin } from '../utils/access.js';
 import {
@@ -17,6 +18,7 @@ import {
   WEB_DATE_FILTERS,
   leadDateFilterLabel,
 } from '../utils/leadDateFilter.js';
+import { formatReminderDateTime, reminderStatus } from '../utils/leadReminder.js';
 
 const PAGE_SIZE = 20;
 
@@ -132,6 +134,7 @@ export default function Leads() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [noteText, setNoteText] = useState('');
   const [noteSaving, setNoteSaving] = useState(false);
+  const [reminderSaving, setReminderSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingLead, setEditingLead] = useState(null);
   const [pasteMode, setPasteMode] = useState(false);
@@ -307,6 +310,21 @@ export default function Leads() {
       toast(e?.message || 'Could not add note', 'info');
     } finally {
       setNoteSaving(false);
+    }
+  };
+
+  const saveReminder = async ({ dueAt, note }) => {
+    if (!detail) return;
+    setReminderSaving(true);
+    try {
+      const item = await apiSetLeadReminder(detail.id, { dueAt, note });
+      setDetail(item);
+      fetchPage();
+      toast('Reminder set', 'bell');
+    } catch (e) {
+      toast(e?.message || 'Could not set reminder', 'info');
+    } finally {
+      setReminderSaving(false);
     }
   };
 
@@ -618,10 +636,16 @@ export default function Leads() {
                     </div>
                     <div className={`lead-kpi ${isOverdue(detail.dueAt) ? 'overdue' : ''}`}>
                       <Clock />
-                      <b>{formatDate(detail.dueAt)}</b>
-                      <span>{isOverdue(detail.dueAt) ? 'Overdue' : 'Follow-up'}</span>
+                      <b>{formatReminderDateTime(detail.dueAt)}</b>
+                      <span>{reminderStatus(detail.dueAt).label}</span>
                     </div>
                   </div>
+
+                  <LeadReminderPanel
+                    dueAt={detail.dueAt}
+                    saving={reminderSaving}
+                    onSave={saveReminder}
+                  />
 
                   <div className="lead-drawer-panel">
                     <div className="lead-drawer-panel-title">Pipeline</div>

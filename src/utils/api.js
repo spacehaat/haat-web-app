@@ -61,6 +61,7 @@ export const {
   apiUpdateLead,
   apiDeleteLead,
   apiAddLeadNote,
+  apiSetLeadReminder,
   apiListRecentClients,
   apiUploadImages,
 } = api;
