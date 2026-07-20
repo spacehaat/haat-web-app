@@ -18,7 +18,7 @@ import {
   WEB_DATE_FILTERS,
   leadDateFilterLabel,
 } from '../utils/leadDateFilter.js';
-import { formatReminderDateTime, reminderStatus } from '../utils/leadReminder.js';
+import { formatReminderDateTime, reminderStatus, activeReminderDueAt } from '../utils/leadReminder.js';
 
 const PAGE_SIZE = 20;
 
@@ -634,15 +634,15 @@ export default function Leads() {
                       <b className="tnum">{detail.proposalIds?.length || 0}</b>
                       <span>Proposals</span>
                     </div>
-                    <div className={`lead-kpi ${isOverdue(detail.dueAt) ? 'overdue' : ''}`}>
+                    <div className={`lead-kpi ${isOverdue(activeReminderDueAt(detail)) ? 'overdue' : ''}`}>
                       <Clock />
-                      <b>{formatReminderDateTime(detail.dueAt)}</b>
-                      <span>{reminderStatus(detail.dueAt).label}</span>
+                      <b>{formatReminderDateTime(activeReminderDueAt(detail))}</b>
+                      <span>{reminderStatus(activeReminderDueAt(detail)).label}</span>
                     </div>
                   </div>
 
                   <LeadReminderPanel
-                    dueAt={detail.dueAt}
+                    dueAt={activeReminderDueAt(detail)}
                     saving={reminderSaving}
                     onSave={saveReminder}
                   />
