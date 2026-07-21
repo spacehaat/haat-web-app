@@ -19,9 +19,9 @@ export function createApiClient(options = {}) {
 
   /**
    * @param {string} path
-   * @param {{ method?: string, body?: unknown, formData?: boolean }} [opts]
+   * @param {{ method?: string, body?: unknown, formData?: boolean, timeoutMs?: number }} [opts]
    */
-  async function request(path, { method = 'GET', body, formData = false } = {}) {
+  async function request(path, { method = 'GET', body, formData = false, timeoutMs = 25000 } = {}) {
     /** @type {Record<string, string>} */
     const headers = {};
 
@@ -34,12 +34,28 @@ export function createApiClient(options = {}) {
       if (token) headers.authorization = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${baseUrl}${path}`, {
-      method,
-      headers: Object.keys(headers).length ? headers : undefined,
-      body: formData ? body : (body ? JSON.stringify(body) : undefined),
-      credentials: getAccessToken ? 'omit' : credentials,
-    });
+    const controller = new AbortController();
+    const timer = timeoutMs > 0
+      ? setTimeout(() => controller.abort(), timeoutMs)
+      : null;
+
+    let res;
+    try {
+      res = await fetch(`${baseUrl}${path}`, {
+        method,
+        headers: Object.keys(headers).length ? headers : undefined,
+        body: formData ? body : (body ? JSON.stringify(body) : undefined),
+        credentials: getAccessToken ? 'omit' : credentials,
+        signal: controller.signal,
+      });
+    } catch (err) {
+      if (err?.name === 'AbortError') {
+        throw new Error('Request timed out — the server may be waking up. Please try again.');
+      }
+      throw err;
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
 
     const data = await res.json().catch(() => ({}));
 

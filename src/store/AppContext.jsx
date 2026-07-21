@@ -209,7 +209,7 @@ export function AppProvider({ children }) {
           if (data.catalog?.permissions) {
             dispatch({ type: 'PERM_CATALOG', catalog: data.catalog.permissions });
           }
-          await loadAppData();
+          void loadAppData();
         }
       } catch {
         // not authenticated — show login
