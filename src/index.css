@@ -397,7 +397,9 @@ body {
   .browser-screen .browse-count { flex: none; }
   .browser-screen .grid-cards,
   .browser-screen .browse-main > .empty {
-    flex: 1; min-height: 0; overflow-y: auto; align-content: start;
+    flex: 1; min-height: 0; overflow-y: auto;
+    align-content: start; align-items: start;
+    grid-auto-rows: max-content;
   }
   .browser-screen .inv-tbl-wrap { flex: 1; min-height: 0; min-width: 0; max-height: none; overflow: auto; }
   .browser-screen .inv-pagination { flex: none; }
@@ -421,6 +423,18 @@ body {
   font-weight: 700;
 }
 .pg-gap { padding: 0 4px; color: var(--muted); }
+.pg-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.pg-size {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12.5px; color: var(--muted); white-space: nowrap;
+}
+.pg-size select {
+  height: 34px; padding: 0 28px 0 10px; border-radius: var(--r-sm);
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--ink); font: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer;
+}
+.pg-size select:focus { outline: none; border-color: var(--brand); }
 
 /* mobile filters trigger */
 .filters-btn { display: none; align-items: center; gap: 7px; }
@@ -462,7 +476,7 @@ textarea.inp { resize: vertical; line-height: 1.55; }
 /* modal */
 .modal-bg {
   position: fixed; inset: 0; background: rgba(20,18,15,.45);
-  backdrop-filter: blur(3px); display: none; place-items: center; z-index: 50;
+  backdrop-filter: blur(3px); display: none; place-items: center; z-index: 1300;
   animation: fade .15s ease;
 }
 .modal-bg.show { display: grid; }
@@ -659,9 +673,17 @@ textarea.inp { resize: vertical; line-height: 1.55; }
 .browse-count { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
 .browse-count b { color: var(--ink); }
 .dot-sep { margin: 0 4px; color: var(--faint); }
-.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.grid-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  grid-auto-rows: max-content;
+  align-items: start;
+  gap: 16px;
+}
 .lst-card {
   display: flex; flex-direction: column;
+  align-self: start;
+  width: 100%;
   border: 1px solid var(--border); border-radius: var(--r-lg); background: var(--surface);
   overflow: hidden; cursor: pointer;
   transition: border-color .12s, transform .12s, box-shadow .12s;
@@ -971,6 +993,42 @@ textarea.inp { resize: vertical; line-height: 1.55; }
 /* ════════════════════ RESPONSIVE ════════════════════ */
 .modal.modal-wide .modal-body { max-height: 78vh; }
 .fresh-tbl-wrap { overflow: hidden; }
+.fresh-tbl-wrap .inv-pagination { padding: 0 14px 14px; margin-top: 0; }
+.fresh-tbl {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.fresh-tbl thead th {
+  background: var(--surface-2);
+  padding: 12px 14px;
+  font-size: 10.5px;
+  letter-spacing: .06em;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.fresh-tbl td {
+  padding: 13px 14px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border-2);
+}
+.fresh-tbl tbody tr:last-child td { border-bottom: none; }
+.fresh-tbl th:nth-child(1),
+.fresh-tbl td:nth-child(1) { width: 26%; }
+.fresh-tbl th:nth-child(2),
+.fresh-tbl td:nth-child(2) { width: 16%; }
+.fresh-tbl th:nth-child(3),
+.fresh-tbl td:nth-child(3) { width: 8%; text-align: center; }
+.fresh-tbl th:nth-child(4),
+.fresh-tbl td:nth-child(4) { width: 14%; }
+.fresh-tbl th:nth-child(5),
+.fresh-tbl td:nth-child(5) { width: 14%; }
+.fresh-tbl th:nth-child(6),
+.fresh-tbl td:nth-child(6) { width: 22%; text-align: right; }
+.fresh-tbl td:last-child .btn,
+.fresh-tbl td:last-child .replied { display: inline-flex; }
 
 /* —— Tablet / small laptop: stack the two-pane + multi-col layouts —— */
 @media (max-width: 1080px){
@@ -1051,9 +1109,10 @@ textarea.inp { resize: vertical; line-height: 1.55; }
 
   /* Freshness table: drop the two least-critical columns + allow horizontal scroll for the rest */
   .fresh-tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .fresh-tbl { min-width: 640px; table-layout: auto; }
   .fresh-tbl th:nth-child(2), .fresh-tbl td:nth-child(2),
   .fresh-tbl th:nth-child(3), .fresh-tbl td:nth-child(3) { display: none; }
-  .tbl th, .tbl td { padding: 10px 10px; }
+  .fresh-tbl thead th, .fresh-tbl td { padding: 10px 12px; }
 
   /* proposal document reflow */
   .doc { padding: 20px 16px; }
@@ -1670,6 +1729,8 @@ tr.row-fresh { background: var(--fresh-soft); animation: flashfresh 1.4s ease; }
   background: var(--surface-2); color: var(--ink-2);
 }
 .lead-stage.new, .lead-status.new { background: #eef4ff; color: #3559c7; }
+.lead-stage.cna, .lead-status.cna { background: #fdecec; color: #b42318; }
+.lead-stage.cmb, .lead-status.cmb { background: #fff4e5; color: #b54708; }
 .lead-stage.qualified, .lead-status.qualified { background: #f3efff; color: #6b4bc4; }
 .lead-stage.proposal_sent, .lead-status.proposal_sent { background: var(--orange-soft); color: var(--orange-ink); }
 .lead-stage.visit_scheduled, .lead-status.visit_scheduled { background: #e7f7f3; color: #1f7a62; }
@@ -1838,6 +1899,15 @@ tr.row-fresh { background: var(--fresh-soft); animation: flashfresh 1.4s ease; }
   background: var(--ink); color: #fff; border-color: var(--ink);
   box-shadow: 0 2px 8px rgba(20,18,15,.12);
 }
+.lead-stage-step.cna.on { background: #b42318; border-color: #b42318; }
+.lead-stage-step.cmb.on { background: #b54708; border-color: #b54708; }
+
+.cmb-reminder-copy {
+  font-size: 14px; line-height: 1.55; color: var(--muted); margin-bottom: 14px;
+}
+.cmb-reminder-copy strong { color: var(--ink); }
+
+.leads-reminder-filter { white-space: nowrap; }
 
 .lead-contact-list { display: flex; flex-direction: column; gap: 8px; }
 .lead-contact-row {
@@ -1951,4 +2021,4 @@ tr.row-fresh { background: var(--fresh-soft); animation: flashfresh 1.4s ease; }
 .lead-link-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
 .lead-link-banner .spacer { flex: 1; }
 @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
-.fresh-tbl td:last-child .btn { margin-left: auto; }
+.fresh-tbl td:last-child .btn { margin-left: 0; }

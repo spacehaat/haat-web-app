@@ -19,6 +19,8 @@ Phone: +91 98765 43210`;
 
 const STAGES = [
   ['new', 'New'],
+  ['cna', 'Call not attend'],
+  ['cmb', 'Call me back'],
   ['qualified', 'Qualified'],
   ['proposal_sent', 'Proposal sent'],
   ['visit_scheduled', 'Visit scheduled'],

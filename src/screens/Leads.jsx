@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  ChevronLeft, ChevronRight, Loader2, MapPin, MessageSquarePlus,
+  Loader2, MapPin, MessageSquarePlus, Bell,
   Search, UserRound, X, Layers, FileText, Clock, Mail, Phone,
   Plus, Pencil, ClipboardPaste, UserCheck, Filter, RotateCcw,
   Calendar, Users, IndianRupee, Building2, Trash2,
 } from 'lucide-react';
 import LeadFormModal from '../components/LeadFormModal.jsx';
 import LeadReminderPanel from '../components/LeadReminderPanel.jsx';
+import CmbReminderModal from '../components/CmbReminderModal.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
+import ListPagination from '../components/ui/ListPagination.jsx';
 import { useApp } from '../store/AppContext.jsx';
 import {
   apiAddLeadNote, apiDeleteLead, apiGetLead, apiListLeadAssignees, apiListLeads, apiSetLeadReminder, apiUpdateLead,
@@ -19,21 +21,8 @@ import {
   leadDateFilterLabel,
 } from '../utils/leadDateFilter.js';
 import { formatReminderDateTime, reminderStatus, activeReminderDueAt } from '../utils/leadReminder.js';
-
-const PAGE_SIZE = 20;
-
-const STAGES = [
-  ['', 'All'],
-  ['new', 'New'],
-  ['qualified', 'Qualified'],
-  ['proposal_sent', 'Proposal sent'],
-  ['visit_scheduled', 'Visit scheduled'],
-  ['negotiation', 'Negotiation'],
-  ['won', 'Won'],
-  ['lost', 'Lost'],
-];
-
-const STAGE_LABEL = Object.fromEntries(STAGES.filter(([v]) => v).map(([v, l]) => [v, l]));
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination.js';
+import { STAGES, STAGE_LABEL, PIPELINE_STAGES } from '../constants/leads.js';
 
 const SOURCES = [
   ['', 'All sources'],
@@ -119,6 +108,7 @@ export default function Leads() {
   const [searchInput, setSearchInput] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [stageFilter, setStageFilter] = useState('');
+  const [reminderFilter, setReminderFilter] = useState('');
   const [sourceFilter, setSourceFilter] = useState('');
   const [assigneeFilter, setAssigneeFilter] = useState('');
   const [dateFilter, setDateFilter] = useState('this_month');
@@ -126,6 +116,7 @@ export default function Leads() {
   const [customDateTo, setCustomDateTo] = useState('');
   const [stageCounts, setStageCounts] = useState({});
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [items, setItems] = useState([]);
   const [total, setTotal] = useState(0);
   const [pageCount, setPageCount] = useState(1);
@@ -142,6 +133,8 @@ export default function Leads() {
   const [deleting, setDeleting] = useState(false);
   const [assigneeOptions, setAssigneeOptions] = useState([]);
   const [detailAssignees, setDetailAssignees] = useState([]);
+  const [cmbModalOpen, setCmbModalOpen] = useState(false);
+  const [cmbSaving, setCmbSaving] = useState(false);
 
   useEffect(() => {
     if (!canAssign) return;
@@ -157,7 +150,7 @@ export default function Leads() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchQuery, stageFilter, sourceFilter, cityFilter, assigneeFilter, dateFilter, customDateFrom, customDateTo]);
+  }, [searchQuery, stageFilter, reminderFilter, sourceFilter, cityFilter, assigneeFilter, dateFilter, customDateFrom, customDateTo, pageSize]);
 
   const dateRange = useMemo(
     () => resolveLeadDateRange(dateFilter, { from: customDateFrom, to: customDateTo }),
@@ -169,7 +162,7 @@ export default function Leads() {
     try {
       const data = await apiListLeads({
         page,
-        limit: PAGE_SIZE,
+        limit: pageSize,
         search: searchQuery,
         stage: stageFilter,
         source: sourceFilter,
@@ -177,6 +170,7 @@ export default function Leads() {
         assignee: assigneeFilter,
         dateFrom: dateRange.dateFrom,
         dateTo: dateRange.dateTo,
+        reminder: reminderFilter,
       });
       setItems(data.items || []);
       setTotal(data.total ?? 0);
@@ -187,12 +181,12 @@ export default function Leads() {
     } finally {
       setLoading(false);
     }
-  }, [page, searchQuery, stageFilter, sourceFilter, cityFilter, assigneeFilter, dateRange, toast]);
+  }, [page, pageSize, searchQuery, stageFilter, reminderFilter, sourceFilter, cityFilter, assigneeFilter, dateRange, toast]);
 
   useEffect(() => { fetchPage(); }, [fetchPage]);
 
   const hasActiveFilters = Boolean(
-    searchQuery || stageFilter || sourceFilter || assigneeFilter
+    searchQuery || stageFilter || reminderFilter || sourceFilter || assigneeFilter
     || dateFilter !== 'this_month'
     || (dateFilter === 'custom' && (customDateFrom || customDateTo))
     || (cityFilter && cityFilter !== 'All cities'),
@@ -202,6 +196,7 @@ export default function Leads() {
     setSearchInput('');
     setSearchQuery('');
     setStageFilter('');
+    setReminderFilter('');
     setSourceFilter('');
     setAssigneeFilter('');
     setDateFilter('this_month');
@@ -274,15 +269,42 @@ export default function Leads() {
     setEditingLead(null);
   };
 
-  const updateStage = async (stage) => {
+  const applyStageUpdate = async (stage, reminder) => {
     if (!detail) return;
     try {
-      const item = await apiUpdateLead(detail.id, { stage });
+      let item = await apiUpdateLead(detail.id, { stage });
+      if (reminder?.dueAt) {
+        item = await apiSetLeadReminder(detail.id, reminder);
+      }
       setDetail(item);
       fetchPage();
-      toast('Lead stage updated', 'check-circle');
+      toast(reminder?.dueAt ? 'Stage updated and reminder set' : 'Lead stage updated', 'check-circle');
     } catch (e) {
       toast(e?.message || 'Could not update lead', 'info');
+    }
+  };
+
+  const updateStage = async (stage) => {
+    if (!detail) return;
+    if (stage === 'cmb') {
+      setCmbModalOpen(true);
+      return;
+    }
+    await applyStageUpdate(stage);
+  };
+
+  const handleCmbSkip = async () => {
+    setCmbModalOpen(false);
+    await applyStageUpdate('cmb');
+  };
+
+  const handleCmbSave = async (reminder) => {
+    setCmbSaving(true);
+    try {
+      await applyStageUpdate('cmb', reminder);
+      setCmbModalOpen(false);
+    } finally {
+      setCmbSaving(false);
     }
   };
 
@@ -329,17 +351,8 @@ export default function Leads() {
   };
 
   const currentPage = Math.min(page, pageCount);
-  const rangeStart = total ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
-  const rangeEnd = Math.min(currentPage * PAGE_SIZE, total);
-
-  const pageItems = useMemo(() => {
-    const pages = [];
-    for (let i = 1; i <= pageCount; i += 1) {
-      if (i === 1 || i === pageCount || Math.abs(i - currentPage) <= 1) pages.push(i);
-      else if (pages[pages.length - 1] !== '…') pages.push('…');
-    }
-    return pages;
-  }, [pageCount, currentPage]);
+  const rangeStart = total ? (currentPage - 1) * pageSize + 1 : 0;
+  const rangeEnd = Math.min(currentPage * pageSize, total);
 
   const dateFilterLabel = leadDateFilterLabel(dateFilter, WEB_DATE_FILTERS);
 
@@ -467,6 +480,13 @@ export default function Leads() {
               </select>
             </label>
           ) : null}
+          <button
+            type="button"
+            className={`btn sm leads-reminder-filter ${reminderFilter === 'upcoming' ? 'primary' : ''}`}
+            onClick={() => setReminderFilter(reminderFilter === 'upcoming' ? '' : 'upcoming')}
+          >
+            <Bell /> Upcoming reminders
+          </button>
           {hasActiveFilters ? (
             <button type="button" className="btn sm leads-clear-btn" onClick={clearFilters}>
               <RotateCcw /> Clear filters
@@ -548,28 +568,24 @@ export default function Leads() {
         </div>
       </div>
 
-      {total > PAGE_SIZE && (
-        <div className="inv-pagination leads-pagination">
-          <span className="pg-info">
-            Page <b className="tnum">{currentPage}</b> of <b className="tnum">{pageCount}</b>
-          </span>
-          <div className="pg-controls">
-            <button className="btn sm pg-btn" disabled={currentPage === 1 || loading} onClick={() => setPage(currentPage - 1)}>
-              <ChevronLeft />
-            </button>
-            {pageItems.map((it, i) => (
-              it === '…' ? <span key={`gap-${i}`} className="pg-gap">…</span> : (
-                <button key={it} className={`btn sm pg-num ${it === currentPage ? 'on' : ''}`} onClick={() => setPage(it)} disabled={loading}>
-                  {it}
-                </button>
-              )
-            ))}
-            <button className="btn sm pg-btn" disabled={currentPage === pageCount || loading} onClick={() => setPage(currentPage + 1)}>
-              <ChevronRight />
-            </button>
-          </div>
-        </div>
-      )}
+      <ListPagination
+        className="leads-pagination"
+        currentPage={currentPage}
+        pageCount={pageCount}
+        total={total}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+        loading={loading}
+      />
+
+      <CmbReminderModal
+        show={cmbModalOpen}
+        onClose={() => { if (!cmbSaving) setCmbModalOpen(false); }}
+        onSkip={handleCmbSkip}
+        onSave={handleCmbSave}
+        saving={cmbSaving}
+      />
 
       <LeadFormModal
         show={formOpen}
@@ -650,7 +666,7 @@ export default function Leads() {
                   <div className="lead-drawer-panel">
                     <div className="lead-drawer-panel-title">Pipeline</div>
                     <div className="lead-stage-track">
-                      {STAGES.filter(([v]) => v).map(([value, label]) => (
+                      {PIPELINE_STAGES.map(([value, label]) => (
                         <button
                           key={value}
                           type="button"

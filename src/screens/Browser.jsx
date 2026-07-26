@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, LayoutGrid, List, SearchX, Pencil, Eye, Check, X, SlidersHorizontal, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
+import { Plus, LayoutGrid, List, SearchX, Pencil, Eye, Check, X, SlidersHorizontal, Loader2, Trash2 } from 'lucide-react';
 import { useApp } from '../store/AppContext.jsx';
 import FreshBadge from '../components/ui/FreshBadge.jsx';
 import Modal from '../components/ui/Modal.jsx';
+import ListPagination from '../components/ui/ListPagination.jsx';
 import { inr, coverImg } from '../utils/helpers.js';
+import { DEFAULT_PAGE_SIZE } from '../utils/pagination.js';
 import { profileOf } from '../data/schema.js';
 import { BUILDING_TYPES, SPACE_TYPES, AMEN } from '../data/db.js';
 import { apiGetListing, apiListListings } from '../utils/api.js';
@@ -39,13 +41,12 @@ const INITIAL_FILTER = {
 };
 
 const MIN_SEAT_TIERS = [0, 10, 25, 50];
-const PAGE_SIZE = 20;
 
 function normalizeListing(l) {
   return { ...l, id: l._id || l.id, days: l.fresh?.days ?? 0 };
 }
 
-function buildApiFilters(bFilter, cityFilter, search, page) {
+function buildApiFilters(bFilter, cityFilter, search, page, limit) {
   return {
     city: cityFilter,
     type: bFilter.type,
@@ -60,7 +61,7 @@ function buildApiFilters(bFilter, cityFilter, search, page) {
     vastu: bFilter.vastu || undefined,
     search: search || undefined,
     page,
-    limit: PAGE_SIZE,
+    limit,
   };
 }
 
@@ -81,6 +82,7 @@ export default function Browser() {
   const [editListing, setEditListing] = useState(null);
   const [galleryListing, setGalleryListing] = useState(null);
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
@@ -95,12 +97,12 @@ export default function Browser() {
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
-  useEffect(() => { setPage(1); }, [bFilter, cityFilter, debouncedSearch]);
+  useEffect(() => { setPage(1); }, [bFilter, cityFilter, debouncedSearch, pageSize]);
 
   const fetchPage = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await apiListListings(buildApiFilters(bFilter, cityFilter, debouncedSearch, page));
+      const data = await apiListListings(buildApiFilters(bFilter, cityFilter, debouncedSearch, page, pageSize));
       setItems((data.items || []).map(normalizeListing));
       setTotal(data.total ?? 0);
       setPageCount(data.pageCount ?? 1);
@@ -110,7 +112,7 @@ export default function Browser() {
     } finally {
       setLoading(false);
     }
-  }, [bFilter, cityFilter, debouncedSearch, page, toast]);
+  }, [bFilter, cityFilter, debouncedSearch, page, pageSize, toast]);
 
   useEffect(() => { fetchPage(); }, [fetchPage]);
 
@@ -144,20 +146,6 @@ export default function Browser() {
   }, [searchParams, setSearchParams]);
 
   const currentPage = Math.min(page, pageCount);
-  const rangeStart = total ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
-  const rangeEnd = Math.min(currentPage * PAGE_SIZE, total);
-
-  const pageItems = useMemo(() => {
-    const pages = [];
-    for (let i = 1; i <= pageCount; i += 1) {
-      if (i === 1 || i === pageCount || Math.abs(i - currentPage) <= 1) {
-        pages.push(i);
-      } else if (pages[pages.length - 1] !== '…') {
-        pages.push('…');
-      }
-    }
-    return pages;
-  }, [pageCount, currentPage]);
 
   const activeFilterCount =
     (bFilter.type !== 'All' ? 1 : 0) +
@@ -551,45 +539,15 @@ export default function Browser() {
             </div>
           )}
 
-          {total > PAGE_SIZE && (
-            <div className="inv-pagination">
-              <span className="pg-info">
-                Showing <b className="tnum">{rangeStart}</b>–<b className="tnum">{rangeEnd}</b> of <b className="tnum">{total}</b>
-              </span>
-              <div className="pg-controls">
-                <button
-                  className="btn sm pg-btn"
-                  disabled={currentPage === 1 || loading}
-                  onClick={() => setPage(currentPage - 1)}
-                  aria-label="Previous page"
-                >
-                  <ChevronLeft />
-                </button>
-                {pageItems.map((it, i) => (
-                  it === '…' ? (
-                    <span key={`gap-${i}`} className="pg-gap">…</span>
-                  ) : (
-                    <button
-                      key={it}
-                      className={`btn sm pg-num ${it === currentPage ? 'on' : ''}`}
-                      onClick={() => setPage(it)}
-                      disabled={loading}
-                    >
-                      {it}
-                    </button>
-                  )
-                ))}
-                <button
-                  className="btn sm pg-btn"
-                  disabled={currentPage === pageCount || loading}
-                  onClick={() => setPage(currentPage + 1)}
-                  aria-label="Next page"
-                >
-                  <ChevronRight />
-                </button>
-              </div>
-            </div>
-          )}
+          <ListPagination
+            currentPage={currentPage}
+            pageCount={pageCount}
+            total={total}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+            loading={loading}
+          />
         </div>
       </div>
 

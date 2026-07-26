@@ -1,7 +1,8 @@
 import { X } from 'lucide-react';
 import { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
-export default function Modal({ show, onClose, title, children, size = '', footer }) {
+export default function Modal({ show, onClose, title, children, size = '', footer, backdropClassName = '' }) {
   useEffect(() => {
     if (!show) return;
     const handler = (e) => { if (e.key === 'Escape') onClose(); };
@@ -11,8 +12,10 @@ export default function Modal({ show, onClose, title, children, size = '', foote
 
   if (!show) return null;
 
-  return (
-    <div className="modal-bg show" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+  const backdropClass = ['modal-bg', 'show', backdropClassName].filter(Boolean).join(' ');
+
+  return createPortal(
+    <div className={backdropClass} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
       <div className={`modal${size ? ' ' + size : ''}`}>
         <div className="modal-head">
           <h2>{title}</h2>
@@ -23,6 +26,7 @@ export default function Modal({ show, onClose, title, children, size = '', foote
         <div className="modal-body">{children}</div>
         {footer && <div className="modal-foot">{footer}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

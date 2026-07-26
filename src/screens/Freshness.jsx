@@ -1,13 +1,17 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle, PieChart, RefreshCw, TrendingUp } from 'lucide-react';
 import { useApp } from '../store/AppContext.jsx';
 import FreshBadge from '../components/ui/FreshBadge.jsx';
+import ListPagination from '../components/ui/ListPagination.jsx';
 import { freshHist } from '../data/db.js';
 import { filterListingsScope } from '../utils/helpers.js';
+import { DEFAULT_FRESHNESS_PAGE_SIZE } from '../utils/pagination.js';
 
 export default function Freshness() {
   const { listings, cityFilter, searchQuery, requestUpdate } = useApp();
   const [pendingIds, setPendingIds] = useState(new Set());
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(DEFAULT_FRESHNESS_PAGE_SIZE);
 
   const list = useMemo(
     () => filterListingsScope(listings, { cityFilter, searchQuery })
@@ -24,6 +28,19 @@ export default function Freshness() {
 
   const total = counts.fresh + counts.stale + counts.expired || 1;
   const staleCount = counts.stale + counts.expired;
+  const listTotal = list.length;
+  const pageCount = Math.max(1, Math.ceil(listTotal / pageSize));
+  const currentPage = Math.min(page, pageCount);
+
+  const pagedList = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return list.slice(start, start + pageSize);
+  }, [list, currentPage, pageSize]);
+
+  useEffect(() => { setPage(1); }, [cityFilter, searchQuery, pageSize]);
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount);
+  }, [page, pageCount]);
 
   const markPending = (ids) => {
     setPendingIds((prev) => {
@@ -108,11 +125,11 @@ export default function Freshness() {
                 <th>Seats</th>
                 <th>Last verified</th>
                 <th>Status</th>
-                <th style={{ textAlign: 'right' }}>Action</th>
+                <th className="act-col">Action</th>
               </tr>
             </thead>
             <tbody>
-              {list.map((l) => {
+              {pagedList.map((l) => {
                 const isPending = pendingIds.has(l.id);
                 const verifiedLabel = l._justNow ? 'Verified just now' : (l.days === 0 ? 'Today' : `${l.days} day${l.days > 1 ? 's' : ''} ago`);
                 let actionNode;
@@ -141,12 +158,20 @@ export default function Freshness() {
                   <td className="tnum">{l.seats}</td>
                   <td><span className={`ft-date ${l._justNow ? 'now' : ''}`}>{verifiedLabel}</span></td>
                   <td><FreshBadge fresh={statusFresh} /></td>
-                  <td style={{ textAlign: 'right' }}>{actionNode}</td>
+                  <td className="act-col">{actionNode}</td>
                   </tr>
                 );
               })}
             </tbody>
         </table>
+        <ListPagination
+          currentPage={currentPage}
+          pageCount={pageCount}
+          total={listTotal}
+          pageSize={pageSize}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => { setPageSize(size); setPage(1); }}
+        />
       </div>
     </>
   );
