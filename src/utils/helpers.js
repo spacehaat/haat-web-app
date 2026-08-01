@@ -101,6 +101,7 @@ export function clientSafeListing(l, profileOf) {
   const contacts = p.contactsMedia || {};
   return {
     operator: l.operator, type: l.type, city: l.city, micro: l.micro, id: l.id, images: l.images,
+    photoMeta: l.photoMeta,
     seats: l.seats, price: l.price, avail: l.avail, fresh: l.fresh, amenities: l.amenities,
     address: identity.address, nearestMetro: identity.nearestMetro, buildingType: identity.buildingType,
     carpet: identity.carpet,
