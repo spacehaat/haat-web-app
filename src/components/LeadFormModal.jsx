@@ -453,6 +453,9 @@ export default function LeadFormModal({
                   </option>
                 ))}
               </select>
+              <span className="fld-hint">
+                Select a user to assign this lead only to them. Leave auto to balance among city users.
+              </span>
             </label>
           ) : null}
         </div>

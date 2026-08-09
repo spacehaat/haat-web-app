@@ -4,6 +4,7 @@ import ProposalSpaceCard from '../components/ProposalSpaceCard.jsx';
 import { useApp } from '../store/AppContext.jsx';
 import { allGalleryPhotos, clientSafeListing, coverNote, inr } from '../utils/helpers.js';
 import { profileOf } from '../data/schema.js';
+import { DEFAULT_PROPOSAL_AMENITIES, PROPOSAL_AVAILABLE_NOW } from '../constants/proposalDefaults.js';
 import { apiGenerateProposalPdf } from '../utils/api.js';
 
 export default function ProposalBuilder() {
@@ -49,14 +50,14 @@ export default function ProposalBuilder() {
       micro: l.micro,
       seats: Number(l.seats || 0),
       price: Number(l.price || 0),
-      avail: l.avail || 'Available now',
+      avail: PROPOSAL_AVAILABLE_NOW,
       freshLabel: l.fresh?.label || 'Verified',
       carpet: Number(l.carpet || 0),
       buildingType: l.buildingType || '',
       nearestMetro: l.nearestMetro || '',
       securityDeposit: l.securityDeposit || '',
       noticePeriod: l.noticePeriod || '',
-      amenities: l.amenities || [],
+      amenities: [...DEFAULT_PROPOSAL_AMENITIES],
       gallery: allGalleryPhotos(l, profileOf).map((ph) => ({
         src: ph.src,
         label: ph.label || l.type,

@@ -2,6 +2,7 @@ import { Building2, Calendar, Check, FileText, MapPin, TrainFront } from 'lucide
 import FreshBadge from './ui/FreshBadge.jsx';
 import { allGalleryPhotos, inr } from '../utils/helpers.js';
 import { profileOf } from '../data/schema.js';
+import { DEFAULT_PROPOSAL_AMENITIES, PROPOSAL_AVAILABLE_NOW } from '../constants/proposalDefaults.js';
 
 export default function ProposalSpaceCard({ listing, index, total }) {
   const photos = allGalleryPhotos(listing, profileOf);
@@ -33,21 +34,13 @@ export default function ProposalSpaceCard({ listing, index, total }) {
       )}
 
       <div className="pc-metrics">
-        <div className="pc-metric">
-          <span>Capacity</span>
-          <b className="tnum">{listing.seats} seats</b>
-        </div>
         <div className="pc-metric highlight">
           <span>Price / seat</span>
           <b className="tnum">{inr(listing.price)}/mo</b>
         </div>
         <div className="pc-metric">
-          <span>Carpet area</span>
-          <b className="tnum">{Number(listing.carpet || 0).toLocaleString('en-IN')} sq ft</b>
-        </div>
-        <div className="pc-metric">
           <span>Availability</span>
-          <b>{listing.avail}</b>
+          <b>{PROPOSAL_AVAILABLE_NOW}</b>
         </div>
       </div>
 
@@ -66,13 +59,11 @@ export default function ProposalSpaceCard({ listing, index, total }) {
         )}
       </div>
 
-      {listing.amenities?.length > 0 && (
-        <div className="pc-amen">
-          {listing.amenities.map((a) => (
-            <span key={a} className="chip"><Check /> {a}</span>
-          ))}
-        </div>
-      )}
+      <div className="pc-amen">
+        {DEFAULT_PROPOSAL_AMENITIES.map((a) => (
+          <span key={a} className="chip"><Check /> {a}</span>
+        ))}
+      </div>
     </article>
   );
 }

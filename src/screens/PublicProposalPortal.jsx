@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { apiGetPublicProposal, apiUpdatePublicProposal, apiBaseUrl } from '../utils/api.js';
 import { inr } from '../utils/helpers.js';
+import { DEFAULT_PROPOSAL_AMENITIES, PROPOSAL_AVAILABLE_NOW } from '../constants/proposalDefaults.js';
 import './PublicProposalPortal.css';
 
 function pdfUrlForToken(token) {
@@ -258,7 +259,6 @@ function SpaceCard({
   onSlide, onExpand, onLike, onReject, onTogglePanel, onSendComment, commentDraft, onCommentDraft,
 }) {
   const metro = listing.nearestMetro || '—';
-  const carpet = listing.carpet ? `${listing.carpet.toLocaleString('en-IN')} sqft` : '—';
 
   return (
     <article className={`space-card ${status === 'shortlisted' ? 'shortlisted' : ''}`}>
@@ -278,18 +278,17 @@ function SpaceCard({
           </div>
         </div>
         <div className="sc-specs">
-          <div className="ssp"><span>Seats</span><b className="tnum">{listing.seats || '—'}</b></div>
-          <div className="ssp"><span>Carpet area</span><b className="tnum">{carpet}</b></div>
-          <div className="ssp"><span>Availability</span><b>{listing.avail || 'Available now'}</b></div>
-          <div className="ssp"><span>Nearest metro</span><b>{metro}</b></div>
+          <div className="ssp"><span>Price / seat</span><b className="tnum">{inr(listing.price)}/mo</b></div>
+          <div className="ssp"><span>Availability</span><b>{PROPOSAL_AVAILABLE_NOW}</b></div>
+          {metro !== '—' ? (
+            <div className="ssp"><span>Nearest metro</span><b>{metro}</b></div>
+          ) : null}
         </div>
-        {listing.amenities?.length ? (
-          <div className="sc-amen">
-            {listing.amenities.map((a) => (
-              <span key={a} className="amen-chip"><Check className="i" />{a}</span>
-            ))}
-          </div>
-        ) : null}
+        <div className="sc-amen">
+          {DEFAULT_PROPOSAL_AMENITIES.map((a) => (
+            <span key={a} className="amen-chip"><Check className="i" />{a}</span>
+          ))}
+        </div>
         <div className="sc-actions">
           <button
             type="button"
