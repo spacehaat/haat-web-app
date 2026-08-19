@@ -1932,6 +1932,12 @@ tr.row-fresh { background: var(--fresh-soft); animation: flashfresh 1.4s ease; }
 .lead-contact-text small { font-size: 10.5px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
 .lead-contact-text b { font-size: 13px; font-weight: 600; color: var(--ink); word-break: break-all; }
 .lead-contact-empty { font-size: 13px; color: var(--muted); padding: 4px 2px; }
+.lead-register-email-btn {
+  width: 100%;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
 
 .lead-assign-row { display: flex; align-items: center; gap: 12px; }
 .lead-assign-info { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }

@@ -8,6 +8,7 @@ import {
 import LeadFormModal from '../components/LeadFormModal.jsx';
 import LeadReminderPanel from '../components/LeadReminderPanel.jsx';
 import CmbReminderModal from '../components/CmbReminderModal.jsx';
+import LeadRegisterEmailModal from '../components/LeadRegisterEmailModal.jsx';
 import ConfirmDialog from '../components/ui/ConfirmDialog.jsx';
 import ListPagination from '../components/ui/ListPagination.jsx';
 import { useApp } from '../store/AppContext.jsx';
@@ -134,6 +135,7 @@ export default function Leads() {
   const [assigneeOptions, setAssigneeOptions] = useState([]);
   const [detailAssignees, setDetailAssignees] = useState([]);
   const [cmbModalOpen, setCmbModalOpen] = useState(false);
+  const [registerEmailOpen, setRegisterEmailOpen] = useState(false);
   const [cmbSaving, setCmbSaving] = useState(false);
 
   useEffect(() => {
@@ -579,6 +581,13 @@ export default function Leads() {
         loading={loading}
       />
 
+      <LeadRegisterEmailModal
+        show={registerEmailOpen}
+        onClose={() => setRegisterEmailOpen(false)}
+        lead={detail}
+        memberName={authUser?.name}
+        memberPhone={authUser?.phone}
+      />
       <CmbReminderModal
         show={cmbModalOpen}
         onClose={() => { if (!cmbSaving) setCmbModalOpen(false); }}
@@ -701,8 +710,19 @@ export default function Leads() {
                         </a>
                       ) : null}
                       {!detail.email && !detail.contact ? (
-                        <div className="lead-contact-empty">No contact details yet</div>
+                        <div className="lead-contact-empty">No client contact details yet</div>
                       ) : null}
+                      <button
+                        type="button"
+                        className="lead-contact-row lead-register-email-btn"
+                        onClick={() => setRegisterEmailOpen(true)}
+                      >
+                        <span className="lead-contact-icon"><FileText /></span>
+                        <span className="lead-contact-text">
+                          <small>Operator</small>
+                          <b>Register lead by email</b>
+                        </span>
+                      </button>
                     </div>
                   </div>
 
